@@ -181,9 +181,11 @@
             border-radius: 2px;
             font-weight: 500;
         }
-        .hud-audio-btn:hover {
-            border-color: rgba(255, 255, 255, 0.4);
-            color: var(--white);
+        @media (hover: hover) {
+            .hud-audio-btn:hover {
+                border-color: rgba(255, 255, 255, 0.4);
+                color: var(--white);
+            }
         }
         .hud-audio-btn.audio-active {
             border-color: var(--accent-green);
@@ -306,10 +308,12 @@
             display: inline-block;
             text-align: center;
         }
-        .cta-primary:hover {
-            transform: scale(1.04);
-            background-color: #d1ff33;
-            box-shadow: 0 0 20px rgba(184, 255, 0, 0.7);
+        @media (hover: hover) {
+            .cta-primary:hover {
+                transform: scale(1.04);
+                background-color: #d1ff33;
+                box-shadow: 0 0 20px rgba(184, 255, 0, 0.7);
+            }
         }
         .cta-secondary {
             background-color: transparent;
@@ -327,9 +331,11 @@
             text-align: center;
             box-sizing: border-box;
         }
-        .cta-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.08);
-            transform: scale(1.04);
+        @media (hover: hover) {
+            .cta-secondary:hover {
+                background-color: rgba(255, 255, 255, 0.08);
+                transform: scale(1.04);
+            }
         }
         .hero-stats {
             display: flex;
@@ -364,10 +370,12 @@
             transform: rotate3d(1, -1, 0, 15deg);
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.6s ease, box-shadow 0.6s ease;
         }
-        .hero-map-wrapper:hover {
-            transform: rotate3d(1, -1, 0, 5deg) scale(1.03);
-            border-color: rgba(184, 255, 0, 0.4);
-            box-shadow: 0 0 40px rgba(184, 255, 0, 0.15), inset 0 0 25px rgba(0, 0, 0, 0.9);
+        @media (hover: hover) {
+            .hero-map-wrapper:hover {
+                transform: rotate3d(1, -1, 0, 5deg) scale(1.03);
+                border-color: rgba(184, 255, 0, 0.4);
+                box-shadow: 0 0 40px rgba(184, 255, 0, 0.15), inset 0 0 25px rgba(0, 0, 0, 0.9);
+            }
         }
         .hero-map-svg {
             width: 100%;
@@ -424,10 +432,12 @@
             border-right: 1px solid rgba(255, 255, 255, 0.02);
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
         }
-        .step-card:hover {
-            box-shadow: 0 8px 25px rgba(184, 255, 0, 0.12);
-            transform: translateY(-6px);
-            border-color: rgba(184, 255, 0, 0.2) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+        @media (hover: hover) {
+            .step-card:hover {
+                box-shadow: 0 8px 25px rgba(184, 255, 0, 0.12);
+                transform: translateY(-6px);
+                border-color: rgba(184, 255, 0, 0.2) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+            }
         }
         .step-icon-wrapper {
             margin-bottom: 30px;
@@ -483,10 +493,12 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
             position: relative;
         }
-        .economy-card:hover {
-            box-shadow: 0 8px 25px rgba(255, 77, 0, 0.12);
-            transform: translateY(-6px);
-            border-color: rgba(255, 77, 0, 0.25) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+        @media (hover: hover) {
+            .economy-card:hover {
+                box-shadow: 0 8px 25px rgba(255, 77, 0, 0.12);
+                transform: translateY(-6px);
+                border-color: rgba(255, 77, 0, 0.25) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+            }
         }
         .economy-hdr {
             display: flex;
@@ -561,9 +573,11 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        .map-desc-item:hover {
-            background-color: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.08);
+        @media (hover: hover) {
+            .map-desc-item:hover {
+                background-color: rgba(255, 255, 255, 0.04);
+                border-color: rgba(255, 255, 255, 0.08);
+            }
         }
         .legend-color-box {
             width: 12px;
@@ -611,9 +625,11 @@
             display: inline-block;
             width: fit-content;
         }
-        .map-cta-link:hover {
-            text-shadow: 0 0 8px var(--accent-green);
-            transform: translateX(6px);
+        @media (hover: hover) {
+            .map-cta-link:hover {
+                text-shadow: 0 0 8px var(--accent-green);
+                transform: translateX(6px);
+            }
         }
         
         .map-preview-side {
@@ -670,15 +686,17 @@
         .map-poly-held, .map-poly-contested, .map-poly-ghost {
             transition: all 0.3s ease;
         }
-        .map-poly-held:hover, .map-poly-held.map-highlight {
-            fill-opacity: 0.35 !important;
-            stroke-width: 4px !important;
+        @media (hover: hover) {
+            .map-poly-held:hover,
+            .map-poly-contested:hover,
+            .map-poly-ghost:hover {
+                fill-opacity: 0.35 !important;
+                stroke-width: 4px !important;
+            }
         }
-        .map-poly-contested:hover, .map-poly-contested.map-highlight {
-            fill-opacity: 0.35 !important;
-            stroke-width: 4px !important;
-        }
-        .map-poly-ghost:hover, .map-poly-ghost.map-highlight {
+        .map-poly-held.map-highlight,
+        .map-poly-contested.map-highlight,
+        .map-poly-ghost.map-highlight {
             fill-opacity: 0.35 !important;
             stroke-width: 4px !important;
         }
@@ -811,9 +829,11 @@
             background: radial-gradient(circle at top right, rgba(184, 255, 0, 0.04) 0%, transparent 70%);
             pointer-events: none;
         }
-        .player-card:hover {
-            box-shadow: 0 10px 25px rgba(184, 255, 0, 0.08);
-            border-color: rgba(184, 255, 0, 0.25) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+        @media (hover: hover) {
+            .player-card:hover {
+                box-shadow: 0 10px 25px rgba(184, 255, 0, 0.08);
+                border-color: rgba(184, 255, 0, 0.25) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+            }
         }
         .player-card-header {
             display: flex;
@@ -884,10 +904,12 @@
             opacity: 0.7;
             transition: all 0.3s ease;
         }
-        .sparkline-bar:hover {
-            opacity: 1;
-            filter: brightness(1.2);
-            box-shadow: 0 0 5px var(--accent-green);
+        @media (hover: hover) {
+            .sparkline-bar:hover {
+                opacity: 1;
+                filter: brightness(1.2);
+                box-shadow: 0 0 5px var(--accent-green);
+            }
         }
         .leaderboard-footer {
             font-family: var(--font-ui);
@@ -950,11 +972,13 @@
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             box-sizing: border-box;
         }
-        .store-btn:hover {
-            border-color: var(--accent-green);
-            color: var(--accent-green);
-            box-shadow: 0 0 15px rgba(184, 255, 0, 0.25);
-            transform: translateY(-3px);
+        @media (hover: hover) {
+            .store-btn:hover {
+                border-color: var(--accent-green);
+                color: var(--accent-green);
+                box-shadow: 0 0 15px rgba(184, 255, 0, 0.25);
+                transform: translateY(-3px);
+            }
         }
         .store-icon {
             flex-shrink: 0;
@@ -992,9 +1016,11 @@
             font-size: 14px;
             transition: color 0.3s ease;
         }
-        .waitlist-trigger:hover {
-            color: #d1ff33;
-            text-shadow: 0 0 8px rgba(184, 255, 0, 0.3);
+        @media (hover: hover) {
+            .waitlist-trigger:hover {
+                color: #d1ff33;
+                text-shadow: 0 0 8px rgba(184, 255, 0, 0.3);
+            }
         }
         .waitlist-form {
             display: flex;
@@ -1033,8 +1059,10 @@
             padding: 0 10px;
             transition: color 0.3s ease;
         }
-        .waitlist-form button:hover {
-            color: var(--white);
+        @media (hover: hover) {
+            .waitlist-form button:hover {
+                color: var(--white);
+            }
         }
         .waitlist-success-msg {
             font-family: var(--font-ui);
@@ -1120,9 +1148,6 @@
             }
             .hero-map-wrapper {
                 transform: none !important;
-            }
-            .hero-map-wrapper:hover {
-                transform: scale(1.02);
             }
             
             .section-title {
@@ -1215,6 +1240,7 @@
             top: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             background-color: var(--bg-dark);
             z-index: 5;
@@ -1263,14 +1289,16 @@
         .block-tile {
             cursor: pointer;
         }
-        .block-tile:hover .roof {
-            stroke: #B8FF00;
-            filter: drop-shadow(0 0 4px rgba(184, 255, 0, 0.7));
-        }
-        .block-tile.claimed:hover .roof {
-            fill: #0f3d0f;
-            stroke: #d0ff33;
-            filter: drop-shadow(0 0 6px rgba(184, 255, 0, 0.9));
+        @media (hover: hover) {
+            .block-tile:hover .roof {
+                stroke: #B8FF00;
+                filter: drop-shadow(0 0 4px rgba(184, 255, 0, 0.7));
+            }
+            .block-tile.claimed:hover .roof {
+                fill: #0f3d0f;
+                stroke: #d0ff33;
+                filter: drop-shadow(0 0 6px rgba(184, 255, 0, 0.9));
+            }
         }
         
         /* Central Claimed turf styles */
@@ -1706,6 +1734,10 @@
             letter-spacing: 1px;
             color: var(--white);
         }
+        #hud-act-2 .hud-title {
+            font-size: 64px;
+            margin-bottom: 8px;
+        }
         .hud-title.large-title {
             font-size: 80px;
             color: var(--accent-green);
@@ -1863,14 +1895,38 @@
             .hud-title {
                 font-size: 40px;
             }
+            #hud-act-2 .hud-title {
+                font-size: 40px;
+            }
             .hud-title.large-title {
                 font-size: 56px;
+            }
+            .hud-card, .hud-badge-container {
+                bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+                width: 92%;
             }
             .hud-card {
                 padding: 20px;
             }
             .scrolly-bridge-container-overlay h2 {
                 font-size: 56px;
+            }
+        }
+        @media (max-width: 480px) {
+            .hud-title {
+                font-size: 32px;
+            }
+            #hud-act-2 .hud-title {
+                font-size: 32px;
+            }
+            .hud-title.large-title {
+                font-size: 44px;
+            }
+            .hud-card {
+                padding: 16px 20px;
+            }
+            .scrolly-bridge-container-overlay h2 {
+                font-size: 36px;
             }
         }
     </style>
@@ -2318,7 +2374,7 @@
                 <!-- Act 2 -->
                 <div class="hud-card" id="hud-act-2" style="text-align: left;">
                     <div class="hud-label">// SCENE_02</div>
-                    <h2 class="hud-title" style="font-family: var(--font-display); font-size: 64px; margin-bottom: 8px;">DO THE CLAIM WALK.</h2>
+                    <h2 class="hud-title">DO THE CLAIM WALK.</h2>
                     <p class="hud-desc" style="font-family: var(--font-ui); font-size: 13px; margin: 0 0 16px 0; max-width: 100%;">Circuit the full block.<br>Close the loop. Lock it down.</p>
                     <div class="perimeter-progress-container" style="width: 100%;">
                         <div class="perimeter-progress-bar-bg" style="width: 100%; height: 3px; background: #222; border-radius: 1.5px; overflow: hidden;">
@@ -2866,10 +2922,12 @@
             document.removeEventListener('click', resumeAudioOnInteraction);
             document.removeEventListener('scroll', resumeAudioOnInteraction);
             document.removeEventListener('keydown', resumeAudioOnInteraction);
+            document.removeEventListener('touchstart', resumeAudioOnInteraction);
         };
         document.addEventListener('click', resumeAudioOnInteraction);
         document.addEventListener('scroll', resumeAudioOnInteraction);
         document.addEventListener('keydown', resumeAudioOnInteraction);
+        document.addEventListener('touchstart', resumeAudioOnInteraction);
         
         const audioBtn = document.getElementById('audio-toggle');
         audioBtn.addEventListener('click', () => {
@@ -2955,46 +3013,53 @@
         });
 
         // --- 2. CURSOR TRAIL EFFECT ---
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         const canvas = document.getElementById('cursor-canvas');
-        const ctx = canvas.getContext('2d');
-        let points = [];
-        
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        
-        window.addEventListener('mousemove', (e) => {
-            points.push({
-                x: e.clientX,
-                y: e.clientY,
-                age: 0,
-                maxAge: 20,
-                size: Math.random() * 3 + 2.5
-            });
-        });
-        
-        function animateCursorTrail() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < points.length; i++) {
-                let p = points[i];
-                p.age++;
-                let alpha = 1 - (p.age / p.maxAge);
-                if (alpha <= 0) {
-                    points.splice(i, 1);
-                    i--;
-                    continue;
+        if (canvas) {
+            if (isTouchDevice) {
+                canvas.style.display = 'none';
+            } else {
+                const ctx = canvas.getContext('2d');
+                let points = [];
+                
+                function resizeCanvas() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
                 }
-                ctx.fillStyle = `rgba(184, 255, 0, ${alpha * 0.45})`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+                
+                window.addEventListener('mousemove', (e) => {
+                    points.push({
+                        x: e.clientX,
+                        y: e.clientY,
+                        age: 0,
+                        maxAge: 20,
+                        size: Math.random() * 3 + 2.5
+                    });
+                });
+                
+                function animateCursorTrail() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    for (let i = 0; i < points.length; i++) {
+                        let p = points[i];
+                        p.age++;
+                        let alpha = 1 - (p.age / p.maxAge);
+                        if (alpha <= 0) {
+                            points.splice(i, 1);
+                            i--;
+                            continue;
+                        }
+                        ctx.fillStyle = `rgba(184, 255, 0, ${alpha * 0.45})`;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    requestAnimationFrame(animateCursorTrail);
+                }
+                animateCursorTrail();
             }
-            requestAnimationFrame(animateCursorTrail);
         }
-        animateCursorTrail();
 
         // --- 3. INTERSECTION OBSERVER REVEAL ---
         const observerOptions = {
@@ -3190,22 +3255,24 @@
         });
 
         // --- 6. SOCIAL PLAYER CARD TILT ---
-        document.querySelectorAll('.player-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const xc = rect.width / 2;
-                const yc = rect.height / 2;
-                const angleX = (yc - y) / 12;
-                const angleY = (x - xc) / 12;
-                card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-5px)`;
+        if (!isTouchDevice) {
+            document.querySelectorAll('.player-card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const xc = rect.width / 2;
+                    const yc = rect.height / 2;
+                    const angleX = (yc - y) / 12;
+                    const angleY = (x - xc) / 12;
+                    card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-5px)`;
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
+                });
             });
-            
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
-            });
-        });
+        }
 
         // --- 7. WAITLIST FORM HANDLING ---
         const waitlistLink = document.getElementById('waitlist-link');
@@ -3611,9 +3678,28 @@
 
         // Resize layout handler
         function handleResize() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const aspect = w / h;
+            
             originX = 500;
-            originY = 350;
-            baseScale = 1.0;
+            
+            if (w < 768) {
+                // Mobile layout logic
+                if (aspect < 1.0) {
+                    // Portrait screen: scale down the isometric world base scale, shift originY up to make room for bottom HUD cards
+                    baseScale = Math.max(0.48, w / 768);
+                    originY = 240;
+                } else {
+                    // Landscape screen: scale down further, shift originY up
+                    baseScale = Math.max(0.4, h / 600);
+                    originY = 180;
+                }
+            } else {
+                // Desktop layout logic
+                baseScale = 1.0;
+                originY = 350;
+            }
             updateScroll();
         }
 
