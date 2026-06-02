@@ -1200,6 +1200,411 @@
                 display: none; /* Hide header ticker on mobile to save space */
             }
         }
+
+        /* --- SCROLLYTELLING STYLING --- */
+        .scrolly-section {
+            position: relative;
+            background-color: var(--bg-dark);
+            padding: 0;
+            margin-top: 40px;
+        }
+        .scrolly-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .scrolly-left-cards {
+            display: flex;
+            flex-direction: column;
+            padding: 0 4%;
+            z-index: 10;
+        }
+        .scrolly-card {
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 45px 40px;
+            background-color: var(--card-bg);
+            border-top: 3px solid rgba(184, 255, 0, 0.2);
+            margin: 8vh 0;
+            border-radius: 0 0 6px 6px;
+            border-left: 1px solid rgba(255,255,255,0.02);
+            border-right: 1px solid rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            opacity: 0.25;
+            transform: scale(0.96);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .scrolly-card.active-scrolly-card {
+            opacity: 1;
+            transform: scale(1);
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 40px rgba(184, 255, 0, 0.12);
+        }
+        .scrolly-card-label {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--accent-green);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .scrolly-card-title {
+            font-family: var(--font-display);
+            font-size: 52px;
+            color: var(--white);
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+        .scrolly-card-body {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--white-muted);
+        }
+        
+        .scrolly-right-canvas {
+            position: sticky;
+            top: 70px; /* offset of sticky header */
+            height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+            z-index: 5;
+        }
+        .character-canvas-svg {
+            width: 100%;
+            height: 100%;
+            max-height: 480px;
+            max-width: 380px;
+            display: block;
+        }
+
+        /* --- CHARACTER POSTURES & ASSETS GENERAL --- */
+        .char-standing-legs, .char-walking-legs,
+        .arm-standard, .arm-victory, .arm-slouch, .arm-confident {
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .char-upper-body {
+            transform-origin: 200px 280px;
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .char-head {
+            transform-origin: 200px 140px;
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- DEFAULT SCENE ASSET HIDDEN STATES --- */
+        .char-walking-legs, .arm-victory, .arm-slouch, .arm-confident,
+        .phone-map-scene1, .phone-map-scene2, .phone-map-scene4,
+        .scene-2-steps, .scene-3-burst, .scene-3-badge,
+        .scene-4-coins, .scene-4-card, .scene-5-warning,
+        .scene6-substate-a, .scene6-substate-b {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- SCENE-SPECIFIC VISIBILITY OVERRIDES --- */
+        
+        /* Scene 1: Waiting */
+        [data-scene="1"] .char-standing-legs { opacity: 1; }
+        [data-scene="1"] .arm-standard { opacity: 1; }
+        [data-scene="1"] .phone-map-scene1 { opacity: 1; }
+        [data-scene="1"] .char-wrapper {
+            animation: char-sway 3s ease-in-out infinite;
+        }
+        [data-scene="1"] .map-cursor {
+            animation: cursor-blink 1s step-end infinite;
+        }
+
+        /* Scene 2: Stride */
+        [data-scene="2"] .char-walking-legs { opacity: 1; }
+        [data-scene="2"] .char-standing-legs { opacity: 0; }
+        [data-scene="2"] .arm-standard { opacity: 1; }
+        [data-scene="2"] .phone-map-scene2 { opacity: 1; }
+        [data-scene="2"] .scene-2-steps { opacity: 1; }
+        [data-scene="2"] .step-dot-1 {
+            animation: footstep-fade 1.5s infinite;
+        }
+        [data-scene="2"] .step-dot-2 {
+            animation: footstep-fade 1.5s infinite 0.5s;
+        }
+        [data-scene="2"] .step-dot-3 {
+            animation: footstep-fade 1.5s infinite 1.0s;
+        }
+        [data-scene="2"] .phone-dash-polygon {
+            animation: draw-polygon-loop 2s linear infinite;
+        }
+
+        /* Scene 3: Claimed */
+        [data-scene="3"] .char-standing-legs { opacity: 1; }
+        [data-scene="3"] .arm-victory { opacity: 1; }
+        [data-scene="3"] .scene-3-burst { opacity: 1; }
+        [data-scene="3"] .scene-3-badge {
+            animation: badge-bounce-in 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        [data-scene="3"] .burst-line {
+            animation: burst-expand-loop 2s infinite ease-out;
+        }
+
+        /* Scene 4: Hotspot */
+        [data-scene="4"] .char-standing-legs { opacity: 1; }
+        [data-scene="4"] .arm-standard { opacity: 1; }
+        [data-scene="4"] .phone-map-scene4 { opacity: 1; }
+        [data-scene="4"] .scene-4-coins { opacity: 1; }
+        [data-scene="4"] .scene-4-card {
+            opacity: 1;
+            transform: scale(1);
+        }
+        [data-scene="4"] .coin-1 {
+            animation: coin-drift-loop 2s infinite ease-out;
+        }
+        [data-scene="4"] .coin-2 {
+            animation: coin-drift-loop 2s infinite ease-out 0.6s;
+        }
+        [data-scene="4"] .coin-3 {
+            animation: coin-drift-loop 2s infinite ease-out 1.2s;
+        }
+        [data-scene="4"] .phone-pulse-pin {
+            animation: pin-pulse-loop 1.5s infinite ease-out;
+        }
+
+        /* Scene 5: Rent Day Slouch */
+        [data-scene="5"] .char-standing-legs { opacity: 1; }
+        [data-scene="5"] .arm-slouch { opacity: 1; }
+        [data-scene="5"] .scene-5-warning {
+            opacity: 1;
+            transform: translateY(0);
+            animation: warning-glow-pulse 2s infinite ease-in-out;
+        }
+        [data-scene="5"] .char-upper-body {
+            transform: translateY(8px) rotate(4deg);
+        }
+        [data-scene="5"] .char-head {
+            transform: translateY(3px) rotate(12deg);
+        }
+        [data-scene="5"] .scrolly-bg-blocks {
+            animation: flicker-blocks-loop 1s infinite ease-in-out;
+        }
+
+        /* Scene 6: Alternating Loop (Confident vs Ghost) */
+        [data-scene="6"] .char-standing-legs { opacity: 1; }
+        [data-scene="6"] .arm-confident { opacity: 1; }
+        [data-scene="6"] .char-wrapper {
+            animation: char-ghost-fade-loop 4s infinite;
+        }
+        [data-scene="6"] .scene6-substate-a {
+            animation: substate-a-opacity-loop 4s infinite;
+        }
+        [data-scene="6"] .scene6-substate-b {
+            animation: substate-b-opacity-loop 4s infinite;
+        }
+        [data-scene="6"] .scene6-blocks-glow {
+            animation: blocks-ghost-glow-loop 4s infinite;
+        }
+        [data-scene="6"] .scene6-phone-body {
+            animation: scene6-phone-stroke-fade-loop 4s infinite;
+        }
+        [data-scene="6"] .scene6-phone-screen {
+            animation: scene6-phone-fill-fade-loop 4s infinite;
+        }
+        [data-scene="6"] .scene6-phone-map,
+        [data-scene="6"] .scene6-phone-flame {
+            animation: scene6-phone-elements-fade-loop 4s infinite;
+        }
+
+        /* --- STAGE BACKGROUND BLOCK DESIGNS --- */
+        .scene-block-item {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 1.5;
+            transition: stroke 0.4s ease, filter 0.4s ease;
+        }
+        [data-scene="2"] .scene-block-item {
+            stroke: rgba(184, 255, 0, 0.2);
+        }
+        [data-scene="3"] .scene-block-item,
+        [data-scene="4"] .scene-block-item {
+            stroke: var(--accent-green);
+            filter: drop-shadow(0 0 4px var(--accent-green));
+            opacity: 0.6;
+        }
+        [data-scene="5"] .scene-block-item {
+            stroke: rgba(255, 77, 0, 0.25);
+            filter: drop-shadow(0 0 2px var(--accent-orange));
+        }
+
+        /* --- COMPOSITOR ANIMATIONS KEYFRAMES --- */
+        
+        /* Default state paused style */
+        .char-wrapper, .map-cursor, .step-dot-1, .step-dot-2, .step-dot-3,
+        .phone-dash-polygon, .scene-3-badge, .burst-line, .coin-1, .coin-2, .coin-3,
+        .phone-pulse-pin, .scene-5-warning, .scrolly-bg-blocks, .scene6-substate-a,
+        .scene6-substate-b, .scene6-blocks-glow, .scene6-phone-body, .scene6-phone-screen,
+        .scene6-phone-map, .scene6-phone-flame {
+            animation-play-state: paused;
+        }
+
+        /* Set running when corresponding data-scene is set */
+        [data-scene="1"] .char-wrapper,
+        [data-scene="1"] .map-cursor,
+        [data-scene="2"] .step-dot-1, [data-scene="2"] .step-dot-2, [data-scene="2"] .step-dot-3,
+        [data-scene="2"] .phone-dash-polygon,
+        [data-scene="3"] .scene-3-badge, [data-scene="3"] .burst-line,
+        [data-scene="4"] .coin-1, [data-scene="4"] .coin-2, [data-scene="4"] .coin-3,
+        [data-scene="4"] .phone-pulse-pin,
+        [data-scene="5"] .scene-5-warning, [data-scene="5"] .scrolly-bg-blocks,
+        [data-scene="6"] .char-wrapper, [data-scene="6"] .scene6-substate-a,
+        [data-scene="6"] .scene6-substate-b, [data-scene="6"] .scene6-blocks-glow,
+        [data-scene="6"] .scene6-phone-body, [data-scene="6"] .scene6-phone-screen,
+        [data-scene="6"] .scene6-phone-map, [data-scene="6"] .scene6-phone-flame {
+            animation-play-state: running;
+        }
+
+        @keyframes char-sway {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(2px); }
+        }
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        @keyframes footstep-fade {
+            0% { opacity: 0; transform: scale(0.6); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+            100% { opacity: 0; transform: scale(0.6); }
+        }
+        @keyframes draw-polygon-loop {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes badge-bounce-in {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes burst-expand-loop {
+            0% { opacity: 0; stroke-dasharray: 0 100; stroke-dashoffset: 0; }
+            20% { opacity: 1; stroke-dasharray: 10 100; stroke-dashoffset: 0; }
+            80%, 100% { opacity: 0; stroke-dasharray: 10 100; stroke-dashoffset: -20; }
+        }
+        @keyframes coin-drift-loop {
+            0% { opacity: 0; transform: translateY(0) scale(0.7); }
+            25% { opacity: 0.9; }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.1); }
+        }
+        @keyframes pin-pulse-loop {
+            0% { transform: scale(0.7); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(0.7); }
+        }
+        @keyframes warning-glow-pulse {
+            0%, 100% { filter: drop-shadow(0 0 2px var(--accent-orange)); }
+            50% { filter: drop-shadow(0 0 8px var(--accent-orange)); }
+        }
+        @keyframes flicker-blocks-loop {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.15; }
+        }
+
+        /* Scene 6 Loop timings */
+        @keyframes char-ghost-fade-loop {
+            0%, 60% { opacity: 1; filter: none; }
+            65%, 95% { opacity: 0.3; filter: grayscale(1); }
+            100% { opacity: 1; filter: none; }
+        }
+        @keyframes substate-a-opacity-loop {
+            0%, 60% { opacity: 1; }
+            65%, 95% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes substate-b-opacity-loop {
+            0%, 60% { opacity: 0; transform: translateY(0); }
+            65% { opacity: 1; transform: translateY(0); }
+            90%, 95% { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 0; transform: translateY(0); }
+        }
+        @keyframes blocks-ghost-glow-loop {
+            0%, 60% { filter: drop-shadow(0 0 4px var(--accent-green)); stroke: var(--accent-green); }
+            65%, 95% { filter: none; stroke: rgba(255,255,255,0.05); }
+            100% { filter: drop-shadow(0 0 4px var(--accent-green)); stroke: var(--accent-green); }
+        }
+        @keyframes scene6-phone-stroke-fade-loop {
+            0%, 60% { stroke: var(--accent-green); }
+            65%, 95% { stroke: #808080; }
+            100% { stroke: var(--accent-green); }
+        }
+        @keyframes scene6-phone-fill-fade-loop {
+            0%, 60% { fill: #000; }
+            65%, 95% { fill: #0a0a0a; }
+            100% { fill: #000; }
+        }
+        @keyframes scene6-phone-elements-fade-loop {
+            0%, 60% { opacity: 1; }
+            65%, 95% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* --- BRIDGE TEXT --- */
+        .scrolly-bridge-wrapper {
+            padding: 80px 4% 40px;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .scrolly-bridge-text {
+            font-family: var(--font-display);
+            font-size: 80px;
+            color: var(--accent-green);
+            text-shadow: 0 0 15px rgba(184, 255, 0, 0.4);
+            margin: 0;
+            line-height: 1;
+            letter-spacing: 2px;
+        }
+
+        /* Media Queries for Scrollytelling stack */
+        @media (max-width: 768px) {
+            .scrolly-container {
+                grid-template-columns: 1fr;
+            }
+            .scrolly-right-canvas {
+                position: sticky;
+                top: 60px; /* underneath header */
+                height: 38vh;
+                width: 100%;
+                background-color: var(--bg-dark);
+                border-bottom: 1px solid rgba(184, 255, 0, 0.15);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                padding: 10px;
+            }
+            .character-canvas-svg {
+                max-height: 100%;
+                max-width: 280px;
+            }
+            .scrolly-left-cards {
+                padding: 0 4%;
+                margin-top: 30px;
+            }
+            .scrolly-card {
+                min-height: auto;
+                margin: 40px 0;
+                padding: 30px 24px;
+            }
+            .scrolly-card-title {
+                font-size: 38px;
+            }
+            .scrolly-bridge-text {
+                font-size: 56px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1326,6 +1731,268 @@
             </div>
         </div>
     </section>
+
+    <!-- SECTION: SCROLLYTELLING NARRATIVE -->
+    <section class="scrolly-section" id="scrolly-narrative">
+        <div class="scrolly-container">
+            
+            <!-- LEFT: Tall scrollable column of scene cards -->
+            <div class="scrolly-left-cards">
+                <!-- Card 1 -->
+                <div class="scrolly-card" data-scene-trigger="1">
+                    <div class="scrolly-card-label">// SCENE_01</div>
+                    <h3 class="scrolly-card-title">THE MAP IS EMPTY.</h3>
+                    <p class="scrolly-card-body">Every street around you is unclaimed. Grey. Dead. Wide open for whoever shows up first.</p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="scrolly-card" data-scene-trigger="2">
+                    <div class="scrolly-card-label">// SCENE_02</div>
+                    <h3 class="scrolly-card-title">DO THE CLAIM WALK.</h3>
+                    <p class="scrolly-card-body">Walk the full perimeter of a block. Every step tightens your grip. The map watches your every move.</p>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="scrolly-card" data-scene-trigger="3">
+                    <div class="scrolly-card-label">// SCENE_03</div>
+                    <h3 class="scrolly-card-title">THIS TURF IS YOURS.</h3>
+                    <p class="scrolly-card-body">Your tag is on the map. That block is marked. Green means held. Keep your Hustle alive or lose it.</p>
+                </div>
+                
+                <!-- Card 4 -->
+                <div class="scrolly-card" data-scene-trigger="4">
+                    <div class="scrolly-card-label">// SCENE_04</div>
+                    <h3 class="scrolly-card-title">BUILD YOUR CORNER.</h3>
+                    <p class="scrolly-card-body">Spend Block Points to drop a Hotspot anywhere in your Turf. Every new visitor earns you Royalties — passive BP, straight to your stack.</p>
+                </div>
+                
+                <!-- Card 5 -->
+                <div class="scrolly-card" data-scene-trigger="5">
+                    <div class="scrolly-card-label">// SCENE_05</div>
+                    <h3 class="scrolly-card-title">RENT DAY.</h3>
+                    <p class="scrolly-card-body">Every month you pay Block Points to Hold your Turf. High Heat Score zones cost more — but pay back harder. Miss it and you Go Ghost.</p>
+                </div>
+                
+                <!-- Card 6 -->
+                <div class="scrolly-card" data-scene-trigger="6">
+                    <div class="scrolly-card-label">// SCENE_06</div>
+                    <h3 class="scrolly-card-title">HOLD IT OR LOSE IT.</h3>
+                    <p class="scrolly-card-body">Go Ghost and your Turf turns grey — open for anyone to snatch. Keep the Hustle alive. The streets don't wait.</p>
+                </div>
+            </div>
+            
+            <!-- RIGHT: Sticky Character Canvas -->
+            <div class="scrolly-right-canvas" id="scrolly-canvas-wrapper" data-scene="1">
+                <svg class="character-canvas-svg" viewBox="0 0 400 500">
+                    <defs>
+                        <!-- Glow filters -->
+                        <filter id="glow-green-scrolly" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                        <filter id="glow-orange-scrolly" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Background street network (outlined blocks) -->
+                    <g class="scene6-blocks-glow">
+                        <g class="scrolly-bg-blocks">
+                            <rect x="50" y="210" width="80" height="70" rx="4" class="scene-block-item" />
+                            <rect x="270" y="230" width="80" height="80" rx="4" class="scene-block-item" />
+                            <rect x="60" y="320" width="90" height="60" rx="4" class="scene-block-item" />
+                            <rect x="250" y="330" width="80" height="60" rx="4" class="scene-block-item" />
+                        </g>
+                    </g>
+
+                    <!-- Standing platform / ground line -->
+                    <line x1="60" y1="410" x2="340" y2="410" stroke="#B8FF00" stroke-width="2" filter="url(#glow-green-scrolly)" class="scene6-blocks-glow" />
+
+                    <!-- SCENE 2: FOOTSTEPS -->
+                    <g class="scene-2-steps">
+                        <circle cx="120" cy="380" r="4.5" class="footstep-dot step-dot-1" />
+                        <circle cx="145" cy="390" r="4.5" class="footstep-dot step-dot-2" />
+                        <circle cx="170" cy="382" r="4.5" class="footstep-dot step-dot-3" />
+                    </g>
+
+                    <!-- SCENE 3: VICTORY BURST -->
+                    <g class="scene-3-burst">
+                        <line x1="255" y1="110" x2="230" y2="85" class="burst-line" />
+                        <line x1="255" y1="110" x2="280" y2="85" class="burst-line" />
+                        <line x1="255" y1="110" x2="215" y2="120" class="burst-line" />
+                        <line x1="255" y1="110" x2="295" y2="120" class="burst-line" />
+                        <line x1="255" y1="110" x2="235" y2="140" class="burst-line" />
+                        <line x1="255" y1="110" x2="275" y2="140" class="burst-line" />
+                    </g>
+
+                    <!-- SCENE 4: FLOATING COINS -->
+                    <g class="scene-4-coins">
+                        <text x="210" y="160" class="coin-icon coin-1" font-size="16" fill="var(--accent-green)">●</text>
+                        <text x="270" y="150" class="coin-icon coin-2" font-size="16" fill="var(--accent-green)">●</text>
+                        <text x="240" y="175" class="coin-icon coin-3" font-size="16" fill="var(--accent-green)">●</text>
+                    </g>
+
+                    <!-- CHARACTER MASTER WRAPPER -->
+                    <g class="char-wrapper">
+                        <!-- Legs set 1 (Standing Pose) -->
+                        <g class="char-standing-legs">
+                            <!-- Left Leg -->
+                            <path d="M175,280 L175,395 L165,395 L165,406 L187,406 L187,395 L180,395 L180,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                            <!-- Right Leg -->
+                            <path d="M220,280 L220,395 L210,395 L210,406 L232,406 L232,395 L225,395 L225,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                            <!-- Sneaker Soles -->
+                            <rect x="165" y="402" width="22" height="4" fill="var(--accent-green)" />
+                            <rect x="210" y="402" width="22" height="4" fill="var(--accent-green)" />
+                        </g>
+
+                        <!-- Legs set 2 (Walking/Stride Pose) -->
+                        <g class="char-walking-legs">
+                            <!-- Left Leg (stepping back) -->
+                            <path d="M175,280 L150,375 L138,375 L135,386 L158,386 L158,375 L180,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                            <!-- Right Leg (stepping forward/lifted) -->
+                            <path d="M220,280 L238,360 L255,385 L268,385 L264,396 L242,396 L232,370 L210,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                            <!-- Sneaker Soles -->
+                            <rect x="135" y="382" width="23" height="4" fill="var(--accent-green)" transform="rotate(-12 135 382)" />
+                            <rect x="242" y="392" width="22" height="4" fill="var(--accent-green)" transform="rotate(12 242 392)" />
+                        </g>
+
+                        <!-- Upper Body: Torso & Head -->
+                        <g class="char-upper-body">
+                            <!-- Torso (Streetwear Jacket) -->
+                            <path d="M165,160 L235,160 L242,280 L158,280 Z" fill="#181818" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+                            <!-- Jacket Zipper Detail -->
+                            <line x1="200" y1="160" x2="200" y2="280" stroke="var(--accent-green)" stroke-width="2" opacity="0.8" />
+
+                            <!-- Head Group -->
+                            <g class="char-head">
+                                <!-- Head Capsule -->
+                                <rect x="185" y="110" width="30" height="36" rx="10" fill="#121212" stroke="var(--accent-green)" stroke-width="1.5" />
+                                <!-- Futuristic goggles -->
+                                <rect x="189" y="120" width="22" height="7" rx="1.5" fill="var(--accent-green)" />
+                                <!-- Cap -->
+                                <path d="M182,118 Q200,98 218,118 L228,119 L213,123 Z" fill="#111" stroke="var(--accent-green)" stroke-width="0.5" />
+                            </g>
+
+                            <!-- ARMS & PHONES -->
+                            
+                            <!-- ARM 1: Standard (scenes 1, 2, 4) -->
+                            <g class="arm-standard">
+                                <path d="M 230,175 L 260,205 L 250,195" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
+                                <!-- Phone container -->
+                                <g transform="translate(250, 185) rotate(-10)">
+                                    <!-- Phone body -->
+                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-green)" stroke-width="1" />
+                                    <!-- Screen -->
+                                    <rect x="-7" y="-13" width="14" height="26" fill="#000" />
+                                    <!-- Screen Contents: Scene 1 -->
+                                    <g class="phone-map-scene1">
+                                        <line x1="-5" y1="0" x2="5" y2="0" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                                        <line x1="0" y1="-7" x2="0" y2="7" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                                        <rect x="-2" y="-2" width="4" height="4" fill="#fff" class="map-cursor" />
+                                    </g>
+                                    <!-- Screen Contents: Scene 2 -->
+                                    <g class="phone-map-scene2">
+                                        <!-- drawing green polygon -->
+                                        <rect x="-5" y="-9" width="10" height="18" fill="none" stroke="var(--accent-green)" stroke-dasharray="60" stroke-dashoffset="60" stroke-width="1" class="phone-dash-polygon" />
+                                    </g>
+                                    <!-- Screen Contents: Scene 4 -->
+                                    <g class="phone-map-scene4">
+                                        <rect x="-5" y="-9" width="10" height="18" fill="rgba(184,255,0,0.3)" stroke="var(--accent-green)" stroke-width="0.5" />
+                                        <circle cx="0" cy="0" r="2.5" fill="var(--accent-green)" class="phone-pulse-pin" />
+                                    </g>
+                                </g>
+                            </g>
+
+                            <!-- ARM 2: Victory (scene 3) -->
+                            <g class="arm-victory">
+                                <path d="M 230,175 L 245,140 L 255,110" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
+                                <!-- Phone container -->
+                                <g transform="translate(255, 110) rotate(15)">
+                                    <!-- Phone body -->
+                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-green)" stroke-width="1" />
+                                    <!-- Screen -->
+                                    <rect x="-7" y="-13" width="14" height="26" fill="#000" />
+                                    <!-- Screen contents: Solid green polygon with white pin -->
+                                    <rect x="-5" y="-9" width="10" height="18" fill="var(--accent-green)" />
+                                    <circle cx="0" cy="0" r="2.5" fill="#fff" />
+                                </g>
+                            </g>
+
+                            <!-- ARM 3: Slouch (scene 5) -->
+                            <g class="arm-slouch">
+                                <path d="M 230,175 L 242,210 L 220,215" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
+                                <!-- Phone container -->
+                                <g transform="translate(220, 215) rotate(-30)">
+                                    <!-- Phone body -->
+                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-orange)" stroke-width="1" />
+                                    <!-- Screen -->
+                                    <rect x="-7" y="-13" width="14" height="26" fill="#1a0700" />
+                                    <!-- Calendar timer screen details -->
+                                    <rect x="-4" y="-7" width="8" height="6" fill="none" stroke="var(--accent-orange)" stroke-width="0.5" />
+                                    <circle cx="0" cy="4" r="3" fill="none" stroke="var(--accent-orange)" stroke-width="0.5" />
+                                </g>
+                            </g>
+
+                            <!-- ARM 4: Confident (scene 6) -->
+                            <g class="arm-confident">
+                                <path d="M 230,175 L 252,168 L 262,142" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
+                                <!-- Phone container -->
+                                <g transform="translate(262, 142) rotate(5)">
+                                    <!-- Phone body -->
+                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-green)" stroke-width="1" class="scene6-phone-body" />
+                                    <!-- Screen -->
+                                    <rect x="-7" y="-13" width="14" height="26" fill="#000" class="scene6-phone-screen" />
+                                    <!-- Streak/Flame screen details -->
+                                    <rect x="-5" y="-9" width="10" height="18" fill="rgba(184,255,0,0.2)" stroke="var(--accent-green)" stroke-width="0.5" class="scene6-phone-map" />
+                                    <circle cx="0" cy="0" r="2.5" fill="var(--accent-green)" class="scene6-phone-flame" />
+                                </g>
+                            </g>
+
+                        </g> <!-- Upper Body end -->
+                    </g> <!-- Character Master end -->
+
+                    <!-- SCENE-SPECIFIC OVERLAYS OUTSIDE CHARACTER -->
+
+                    <!-- SCENE 3: FLOATING BADGE -->
+                    <g class="scene-3-badge" transform="translate(0, 0)">
+                        <rect x="135" y="55" width="130" height="22" rx="11" fill="#111" stroke="var(--accent-green)" stroke-width="1.5" filter="url(#glow-green-scrolly)" />
+                        <text x="200" y="69" font-family="var(--font-ui)" font-size="9" fill="var(--accent-green)" text-anchor="middle" font-weight="bold">TURF CLAIMED</text>
+                    </g>
+
+                    <!-- SCENE 4: FLOATING CARD -->
+                    <g class="scene-4-card" transform="translate(0, 0)">
+                        <rect x="90" y="45" width="220" height="38" rx="4" fill="#111" stroke="var(--accent-green)" stroke-width="1.5" filter="url(#glow-green-scrolly)" />
+                        <text x="200" y="68" font-family="var(--font-ui)" font-size="9" fill="var(--white)" text-anchor="middle" font-weight="bold">HOTSPOT ACTIVE · ROYALTIES: ON</text>
+                    </g>
+
+                    <!-- SCENE 5: FLOATING RENT DAY WARNING -->
+                    <g class="scene-5-warning">
+                        <rect x="105" y="55" width="190" height="24" rx="12" fill="#111" stroke="var(--accent-orange)" stroke-width="1.5" filter="url(#glow-orange-scrolly)" />
+                        <text x="200" y="70" font-family="var(--font-ui)" font-size="9" fill="var(--accent-orange)" text-anchor="middle" font-weight="bold">RENT DAY · 3 DAYS LEFT</text>
+                    </g>
+
+                    <!-- SCENE 6 SUBSTATE B: GONE GHOST BADGE -->
+                    <g class="scene6-substate-b">
+                        <rect x="145" y="55" width="110" height="22" rx="11" fill="#111" stroke="#808080" stroke-width="1.5" />
+                        <text x="200" y="69" font-family="var(--font-ui)" font-size="9" fill="#808080" text-anchor="middle" font-weight="bold">GONE GHOST</text>
+                    </g>
+
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- BRIDGE TO "HOW IT WORKS" -->
+    <div class="scrolly-bridge-wrapper reveal">
+        <h2 class="scrolly-bridge-text">YOUR STREETS ARE WAITING.</h2>
+    </div>
 
     <!-- SECTION 02 — HOW IT WORKS -->
     <section class="section-wrapper" id="how-it-works">
@@ -2142,7 +2809,6 @@
             waitlistForm.querySelector('input').focus();
             playSynthClick();
         });
-        
         waitlistForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('waitlist-email').value;
@@ -2153,6 +2819,36 @@
                 waitlistSuccess.style.display = 'block';
                 playSynthSuccess();
             }
+        });
+
+        // --- 8. SCROLLYTELLING INTERSECTION OBSERVER ---
+        const scrollyCanvas = document.getElementById('scrolly-canvas-wrapper');
+        const scrollyCards = document.querySelectorAll('.scrolly-card');
+        
+        const scrollyObserverOptions = {
+            root: null,
+            rootMargin: '-20% 0px -20% 0px',
+            threshold: 0.5
+        };
+        
+        const scrollyObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sceneNum = entry.target.getAttribute('data-scene-trigger');
+                    scrollyCanvas.setAttribute('data-scene', sceneNum);
+                    
+                    // Highlight card
+                    scrollyCards.forEach(card => card.classList.remove('active-scrolly-card'));
+                    entry.target.classList.add('active-scrolly-card');
+                    
+                    // Trigger sound
+                    playSynthClick();
+                }
+            });
+        }, scrollyObserverOptions);
+        
+        scrollyCards.forEach(card => {
+            scrollyObserver.observe(card);
         });
     </script>
 </body>
