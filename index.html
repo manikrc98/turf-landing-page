@@ -2919,13 +2919,13 @@
             if (isAudioOn) {
                 initAudio();
             }
-            document.removeEventListener('click', resumeAudioOnInteraction);
-            document.removeEventListener('scroll', resumeAudioOnInteraction);
-            document.removeEventListener('keydown', resumeAudioOnInteraction);
-            document.removeEventListener('touchstart', resumeAudioOnInteraction);
+            if (audioCtx && audioCtx.state === 'running') {
+                document.removeEventListener('click', resumeAudioOnInteraction);
+                document.removeEventListener('keydown', resumeAudioOnInteraction);
+                document.removeEventListener('touchstart', resumeAudioOnInteraction);
+            }
         };
         document.addEventListener('click', resumeAudioOnInteraction);
-        document.addEventListener('scroll', resumeAudioOnInteraction);
         document.addEventListener('keydown', resumeAudioOnInteraction);
         document.addEventListener('touchstart', resumeAudioOnInteraction);
         
@@ -2943,7 +2943,20 @@
             }
         });
         
+        // Mobile Haptic Feedback helper
+        function triggerHaptic(type) {
+            if (!isAudioOn || !navigator.vibrate) return;
+            if (type === 'click') {
+                navigator.vibrate(10);
+            } else if (type === 'success') {
+                navigator.vibrate([20, 30, 20]);
+            } else if (type === 'error') {
+                navigator.vibrate([60, 40, 60]);
+            }
+        }
+
         function playSynthClick() {
+            triggerHaptic('click');
             if (!isAudioOn || !audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -2963,6 +2976,7 @@
         }
         
         function playSynthSuccess() {
+            triggerHaptic('success');
             if (!isAudioOn || !audioCtx) return;
             const now = audioCtx.currentTime;
             
@@ -2990,6 +3004,7 @@
         }
 
         function playSynthError() {
+            triggerHaptic('error');
             if (!isAudioOn || !audioCtx) return;
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -3720,6 +3735,7 @@
         let chimeTriggered = false;
 
         function playClaimChime() {
+            triggerHaptic('success');
             if (!isAudioOn || !audioCtx) return;
             const now = audioCtx.currentTime;
             
