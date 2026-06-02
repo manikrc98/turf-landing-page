@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURF — Claim Your City Streets</title>
+    
+    <!-- Meta Tags for SEO -->
+    <meta name="description" content="TURF is a real-world, map-based fitness game for Gen Z and millennials. Walk the block, hold the corner, drop hotspots, and earn royalties. Play the city.">
+    <meta name="keywords" content="TURF, fitness game, walking game, map game, urban streetwear, claim turf, block points">
+    <meta name="author" content="TURF Team">
+    
+    <!-- Open Graph / Social sharing -->
+    <meta property="og:title" content="TURF — Claim Your City Streets">
+    <meta property="og:description" content="Own city streets by walking them. A real-world map fitness game. Walk it. Own it. Hold it.">
+    <meta property="og:type" content="website">
+
+    <!-- Google Fonts: Bebas Neue (Hero), DM Mono (UI/Tech), Syne (Labels) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- DESIGN SYSTEM TOKENS --- */
+        :root {
+            --bg-dark: #0A0A0A;
+            --accent-green: #B8FF00;
+            --accent-orange: #FF4D00;
+            --white: #FFFFFF;
+            --white-muted: rgba(255, 255, 255, 0.6);
+            --card-bg: #111111;
+            
+            --font-display: 'Bebas Neue', sans-serif;
+            --font-ui: 'DM Mono', monospace;
+            --font-label: 'Syne', sans-serif;
+        }
+
+        /* --- GLOBAL BASICS --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(rgba(184, 255, 0, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(184, 255, 0, 0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-attachment: fixed;
+            color: var(--white);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- CUSTOM CURSOR TRAIL --- */
+        #cursor-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        /* --- SCANLINE & NOISE OVERLAYS --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(10, 10, 10, 0) 50%, 
+                rgba(0, 0, 0, 0.2) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- SCROLL TRIGGERED TRANSITIONS --- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+        .reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        .stagger-4 { transition-delay: 0.4s; }
+
+        /* --- STICKY HUD HEADER --- */
+        .hud-header {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background-color: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(184, 255, 0, 0.1);
+            padding: 15px 4%;
+        }
+        .hud-header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .hud-brand {
+            font-family: var(--font-display);
+            font-size: 32px;
+            letter-spacing: 2px;
+            color: var(--accent-green);
+            text-shadow: 0 0 10px rgba(184, 255, 0, 0.4);
+            line-height: 1;
+            text-decoration: none;
+        }
+        .hud-stats-ticker {
+            display: flex;
+            gap: 25px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .pulse-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            margin-right: 6px;
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.4; }
+        }
+        .hud-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .hud-audio-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.5);
+            padding: 6px 12px;
+            font-family: var(--font-ui);
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+        .hud-audio-btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            color: var(--white);
+        }
+        .hud-audio-btn.audio-active {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 8px rgba(184, 255, 0, 0.2);
+        }
+        .hud-battery {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        .battery-bar {
+            width: 3px;
+            height: 12px;
+            background-color: var(--accent-green);
+        }
+        .battery-bar.empty {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* --- HUD SECTION DIVIDER --- */
+        .hud-divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 60px 0 20px;
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--accent-green);
+            letter-spacing: 2px;
+            width: 100%;
+        }
+        .hud-line {
+            flex-grow: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-green) 50%, transparent 100%);
+            opacity: 0.5;
+        }
+        .hud-coords {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* --- SECTION BASE STYLES --- */
+        .section-wrapper {
+            padding: 20px 4% 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 80px;
+            line-height: 1;
+            margin: 0 0 45px;
+            color: var(--white);
+            letter-spacing: 1px;
+        }
+
+        /* --- SECTION 01: HERO --- */
+        .hero-section {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            padding: 40px 4% 80px;
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 50px;
+            align-items: center;
+            width: 100%;
+        }
+        .hero-eyebrow {
+            font-family: var(--font-label);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-green);
+            letter-spacing: 4px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: 120px;
+            color: var(--white);
+            line-height: 0.9;
+            margin: 0 0 25px;
+            letter-spacing: 1px;
+        }
+        .hero-subtitle {
+            font-family: var(--font-ui);
+            font-size: 16px;
+            color: var(--white-muted);
+            margin-bottom: 45px;
+            max-width: 520px;
+            line-height: 1.6;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+        .cta-primary {
+            background-color: var(--accent-green);
+            color: #000000;
+            font-family: var(--font-ui);
+            font-weight: 700;
+            border: none;
+            padding: 16px 36px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(184, 255, 0, 0.3);
+            border-radius: 2px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .cta-primary:hover {
+            transform: scale(1.04);
+            background-color: #d1ff33;
+            box-shadow: 0 0 20px rgba(184, 255, 0, 0.7);
+        }
+        .cta-secondary {
+            background-color: transparent;
+            color: var(--white);
+            font-family: var(--font-ui);
+            font-weight: 700;
+            border: 2px solid var(--white);
+            padding: 14px 34px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .cta-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            transform: scale(1.04);
+        }
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            flex-wrap: wrap;
+        }
+        .stat-separator {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+        
+        .hero-map-mockup {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .hero-map-wrapper {
+            width: 100%;
+            max-width: 440px;
+            aspect-ratio: 1/1;
+            background-color: #0e0e0e;
+            border: 1px solid rgba(184, 255, 0, 0.15);
+            box-shadow: 0 0 30px rgba(184, 255, 0, 0.03), inset 0 0 25px rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            position: relative;
+            transform: rotate3d(1, -1, 0, 15deg);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.6s ease, box-shadow 0.6s ease;
+        }
+        .hero-map-wrapper:hover {
+            transform: rotate3d(1, -1, 0, 5deg) scale(1.03);
+            border-color: rgba(184, 255, 0, 0.4);
+            box-shadow: 0 0 40px rgba(184, 255, 0, 0.15), inset 0 0 25px rgba(0, 0, 0, 0.9);
+        }
+        .hero-map-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* Hero Path animation */
+        .animated-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes drawPath {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* --- SECTION 02: HOW IT WORKS --- */
+        .scroll-row {
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            padding: 10px 0 40px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) #111;
+        }
+        .scroll-row::-webkit-scrollbar {
+            height: 6px;
+        }
+        .scroll-row::-webkit-scrollbar-track {
+            background: #111;
+            border-radius: 3px;
+        }
+        .scroll-row::-webkit-scrollbar-thumb {
+            background-color: var(--accent-green);
+            border-radius: 3px;
+        }
+        
+        .step-card {
+            flex: 0 0 280px;
+            background: var(--card-bg);
+            border-top: 3px solid var(--accent-green);
+            box-shadow: 0 5px 15px rgba(184, 255, 0, 0.02);
+            padding: 35px 30px;
+            border-radius: 0 0 6px 6px;
+            position: relative;
+            overflow: hidden;
+            scroll-snap-align: start;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .step-card:hover {
+            box-shadow: 0 8px 25px rgba(184, 255, 0, 0.12);
+            transform: translateY(-6px);
+            border-color: rgba(184, 255, 0, 0.2) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+        }
+        .step-icon-wrapper {
+            margin-bottom: 30px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .step-headline {
+            font-family: var(--font-label);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--white);
+            margin: 0 0 15px;
+            letter-spacing: 0.5px;
+        }
+        .step-body {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--white-muted);
+            margin: 0;
+            position: relative;
+            z-index: 2;
+        }
+        .step-watermark {
+            position: absolute;
+            bottom: -15px;
+            right: 5px;
+            font-family: var(--font-display);
+            font-size: 110px;
+            color: rgba(184, 255, 0, 0.03);
+            pointer-events: none;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        /* --- SECTION 03: THE ECONOMY --- */
+        .economy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .economy-card {
+            background: var(--card-bg);
+            border-top: 3px solid var(--accent-orange);
+            box-shadow: 0 5px 15px rgba(255, 77, 0, 0.01);
+            padding: 40px 30px;
+            border-radius: 0 0 6px 6px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+        .economy-card:hover {
+            box-shadow: 0 8px 25px rgba(255, 77, 0, 0.12);
+            transform: translateY(-6px);
+            border-color: rgba(255, 77, 0, 0.25) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+        }
+        .economy-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--accent-orange);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+        .economy-tag {
+            font-weight: 700;
+        }
+        .economy-num {
+            opacity: 0.5;
+        }
+        .economy-title {
+            font-family: var(--font-label);
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--white);
+            margin: 0 0 15px;
+            letter-spacing: 1px;
+        }
+        .economy-desc {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--white-muted);
+            margin: 0;
+        }
+        .economy-callout {
+            background-color: var(--accent-green);
+            color: #000000;
+            padding: 45px 30px;
+            margin-top: 40px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(184, 255, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .economy-callout h2 {
+            font-family: var(--font-display);
+            font-size: 44px;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- SECTION 04: THE MAP --- */
+        .map-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 50px;
+            align-items: center;
+        }
+        .map-text-side {
+            display: flex;
+            flex-direction: column;
+        }
+        .map-desc-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 18px;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .map-desc-item:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .legend-color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        .bg-green {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+        .bg-orange {
+            background-color: var(--accent-orange);
+            box-shadow: 0 0 8px var(--accent-orange);
+        }
+        .bg-ghost {
+            background-color: #808080;
+            box-shadow: 0 0 8px #808080;
+        }
+        .map-desc-item h4 {
+            margin: 0 0 5px;
+            font-family: var(--font-label);
+            font-size: 16px;
+            color: var(--white);
+        }
+        .map-desc-item p {
+            margin: 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.5;
+        }
+        .map-info-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            margin: 25px 0 12px;
+        }
+        .map-cta-link {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-green);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            width: fit-content;
+        }
+        .map-cta-link:hover {
+            text-shadow: 0 0 8px var(--accent-green);
+            transform: translateX(6px);
+        }
+        
+        .map-preview-side {
+            width: 100%;
+        }
+        .live-map-card {
+            background-color: #0e0e0e;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.95);
+        }
+        .live-map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .live-map-status {
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .live-map-status::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--accent-green);
+        }
+        .live-map-content {
+            width: 100%;
+            aspect-ratio: 4/5;
+            background-color: #090909;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .live-map-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .map-poly-held, .map-poly-contested, .map-poly-ghost {
+            transition: all 0.3s ease;
+        }
+        .map-poly-held:hover, .map-poly-held.map-highlight {
+            fill-opacity: 0.35 !important;
+            stroke-width: 4px !important;
+        }
+        .map-poly-contested:hover, .map-poly-contested.map-highlight {
+            fill-opacity: 0.35 !important;
+            stroke-width: 4px !important;
+        }
+        .map-poly-ghost:hover, .map-poly-ghost.map-highlight {
+            fill-opacity: 0.35 !important;
+            stroke-width: 4px !important;
+        }
+        
+        .map-hud-overlay {
+            margin-top: 20px;
+            background-color: rgba(10, 10, 10, 0.85);
+            border: 1px solid rgba(184, 255, 0, 0.15);
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 11px;
+        }
+        .map-hud-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            padding-bottom: 6px;
+        }
+        .map-hud-row:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .map-hud-row .label {
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.5px;
+        }
+        .map-hud-row .val {
+            font-weight: bold;
+        }
+
+        /* --- SECTION 05: HEAT SCORE --- */
+        .heat-bar-container {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 35px 30px;
+            margin-bottom: 45px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        .heat-stats-hud {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: 500;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .heat-stats-hud-item {
+            background-color: rgba(0,0,0,0.3);
+            padding: 10px 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            flex: 1;
+            min-width: 220px;
+            text-align: center;
+        }
+        .heat-gradient-bar {
+            width: 100%;
+            height: 16px;
+            background: linear-gradient(90deg, #00A3FF 0%, #FFFFFF 25%, #B8FF00 50%, #FF4D00 75%, #FF0000 100%);
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+        }
+        .heat-indicator {
+            width: 24px;
+            height: 24px;
+            background-color: #FFFFFF;
+            border: 3px solid #000000;
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px #B8FF00;
+            pointer-events: none;
+            transition: left 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .heat-scale-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+        }
+        .heat-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .heat-col-left p, .heat-col-right p {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--white-muted);
+            margin: 0;
+        }
+
+        /* --- SECTION 06: SOCIAL / IDENTITY --- */
+        .player-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+        
+        .player-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-top: 3px solid var(--accent-green);
+            border-radius: 0 0 6px 6px;
+            padding: 30px 24px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top right, rgba(184, 255, 0, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .player-card:hover {
+            box-shadow: 0 10px 25px rgba(184, 255, 0, 0.08);
+            border-color: rgba(184, 255, 0, 0.25) rgba(255, 255, 255, 0.05) rgba(255, 255, 255, 0.05);
+        }
+        .player-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .player-username {
+            font-family: var(--font-label);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+        .landlord-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #000000;
+            background-color: var(--accent-green);
+            border-radius: 2px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 8px rgba(184, 255, 0, 0.3);
+            font-family: var(--font-ui);
+            line-height: 1;
+        }
+        .player-stats {
+            margin-bottom: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 18px 0;
+        }
+        .player-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .player-stat-row:last-child {
+            margin-bottom: 0;
+        }
+        .player-stat-row .lbl {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .player-stat-row .val {
+            font-weight: bold;
+        }
+        .green-text {
+            color: var(--accent-green);
+        }
+        .streak-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .sparkline-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 35px;
+            width: 100%;
+        }
+        .sparkline-bar {
+            flex: 1;
+            background-color: var(--accent-green);
+            border-radius: 1px 1px 0 0;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+        .sparkline-bar:hover {
+            opacity: 1;
+            filter: brightness(1.2);
+            box-shadow: 0 0 5px var(--accent-green);
+        }
+        .leaderboard-footer {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 55px;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- SECTION 07: DOWNLOAD CTA --- */
+        .download-section {
+            min-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 4% 80px;
+        }
+        .download-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 0;
+        }
+        .download-title {
+            font-family: var(--font-display);
+            font-size: 120px;
+            color: var(--accent-green);
+            line-height: 0.9;
+            margin: 0 0 25px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(184, 255, 0, 0.2);
+        }
+        .download-subtitle {
+            font-family: var(--font-ui);
+            font-size: 16px;
+            color: var(--white);
+            margin-bottom: 50px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        .download-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+        .store-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid var(--white);
+            color: var(--white);
+            padding: 12px 26px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: var(--font-ui);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
+        }
+        .store-btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(184, 255, 0, 0.25);
+            transform: translateY(-3px);
+        }
+        .store-icon {
+            flex-shrink: 0;
+        }
+        .store-btn-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+        .store-sub {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.5px;
+        }
+        .store-main {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .waitlist-container {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-height: 60px;
+        }
+        .waitlist-trigger {
+            font-family: var(--font-ui);
+            color: var(--accent-green);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        .waitlist-trigger:hover {
+            color: #d1ff33;
+            text-shadow: 0 0 8px rgba(184, 255, 0, 0.3);
+        }
+        .waitlist-form {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 5px 0;
+            width: 320px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .waitlist-form:focus-within {
+            border-color: var(--accent-green);
+            box-shadow: 0 4px 10px rgba(184, 255, 0, 0.1);
+        }
+        .waitlist-form input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--white);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            flex-grow: 1;
+            text-transform: uppercase;
+            padding: 5px 0;
+        }
+        .waitlist-form input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .waitlist-form button {
+            background: transparent;
+            border: none;
+            color: var(--accent-green);
+            font-family: var(--font-ui);
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            padding: 0 10px;
+            transition: color 0.3s ease;
+        }
+        .waitlist-form button:hover {
+            color: var(--white);
+        }
+        .waitlist-success-msg {
+            font-family: var(--font-ui);
+            color: var(--accent-green);
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(184, 255, 0, 0.2);
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- FOOTER --- */
+        .footer-wrapper {
+            background-color: #050505;
+            padding: 40px 4%;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: center;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+        }
+        .footer-dot {
+            color: var(--accent-green);
+            margin: 0 10px;
+            font-weight: bold;
+        }
+
+        /* --- RESPONSIVE MEDIA QUERIES --- */
+        @media (max-width: 1024px) {
+            .hero-title {
+                font-size: 96px;
+            }
+            .section-title {
+                font-size: 72px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                background-size: 30px 30px;
+            }
+            .hero-section {
+                padding-top: 20px;
+            }
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 50px;
+            }
+            .hero-eyebrow {
+                margin-bottom: 15px;
+            }
+            .hero-title {
+                font-size: 72px;
+            }
+            .hero-subtitle {
+                margin: 0 auto 35px;
+            }
+            .hero-buttons {
+                justify-content: center;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .cta-primary, .cta-secondary {
+                width: 100%;
+            }
+            .hero-stats {
+                justify-content: center;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .hero-map-mockup {
+                max-width: 320px;
+                margin: 0 auto;
+            }
+            .hero-map-wrapper {
+                transform: none !important;
+            }
+            .hero-map-wrapper:hover {
+                transform: scale(1.02);
+            }
+            
+            .section-title {
+                font-size: 56px;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+            .hud-divider {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 40px 0 15px;
+            }
+            .hud-line {
+                width: 100%;
+                background: var(--accent-green);
+                opacity: 0.3;
+            }
+            .hud-coords {
+                font-size: 10px;
+            }
+            
+            .economy-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .economy-callout h2 {
+                font-size: 28px;
+            }
+            
+            .map-grid-layout {
+                grid-template-columns: 1fr;
+                gap: 35px;
+            }
+            .map-preview-side {
+                order: -1; /* Display map first on mobile for visual engagement */
+            }
+            
+            .heat-stats-hud {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .heat-stats-hud-item {
+                min-width: 100%;
+            }
+            .heat-cols {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .player-cards-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .download-title {
+                font-size: 72px;
+            }
+            .download-buttons {
+                flex-direction: column;
+                width: 100%;
+                max-width: 320px;
+                margin: 0 auto 35px;
+            }
+            .store-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .waitlist-form {
+                width: 100%;
+                max-width: 320px;
+            }
+            
+            .hud-stats-ticker {
+                display: none; /* Hide header ticker on mobile to save space */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas for desktop cursor trail -->
+    <canvas id="cursor-canvas"></canvas>
+
+    <!-- Visual texture overlays -->
+    <div class="scanlines"></div>
+    <div class="noise-overlay"></div>
+
+    <!-- Sticky HUD Header -->
+    <header class="hud-header">
+        <div class="hud-header-inner">
+            <a href="#" class="hud-brand">TURF</a>
+            <div class="hud-stats-ticker">
+                <span class="hud-stat-item"><span class="pulse-dot"></span> LIVE_PLAYERS: 14,821</span>
+                <span class="hud-stat-item">SYS_STATUS: ONLINE</span>
+                <span class="hud-stat-item">BLOCKS_HELD: 42,912</span>
+            </div>
+            <div class="hud-controls">
+                <button class="hud-audio-btn" id="audio-toggle">HUD_AUDIO: [OFF]</button>
+                <div class="hud-battery">
+                    <span class="battery-bar"></span>
+                    <span class="battery-bar"></span>
+                    <span class="battery-bar"></span>
+                    <span class="battery-bar empty"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SECTION 01 — HERO -->
+    <section class="hero-section" id="hero">
+        <div class="hero-container">
+            <div class="hero-content reveal">
+                <div class="hero-eyebrow">// THE STREETS ARE YOURS</div>
+                <h1 class="hero-title">CLAIM YOUR TURF</h1>
+                <p class="hero-subtitle">Walk the block. Hold the corner. Go ghost and lose it all.</p>
+                <div class="hero-buttons">
+                    <a href="#download" class="cta-primary">START YOUR CLAIM</a>
+                    <a href="#map-section" class="cta-secondary">SEE THE MAP</a>
+                </div>
+                <div class="hero-stats">
+                    <span class="stat-item">14,200 TURFS CLAIMED</span>
+                    <span class="stat-separator">·</span>
+                    <span class="stat-item">₹8.4L IN ROYALTIES PAID</span>
+                    <span class="stat-separator">·</span>
+                    <span class="stat-item">230 CITIES ACTIVE</span>
+                </div>
+            </div>
+            
+            <div class="hero-map-mockup reveal stagger-2">
+                <div class="hero-map-wrapper">
+                    <!-- Stylized SVG city map tile with glowing green perimeter polygon -->
+                    <svg class="hero-map-svg" viewBox="0 0 500 500">
+                        <defs>
+                            <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="8" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <pattern id="map-grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+                            </pattern>
+                        </defs>
+
+                        <!-- Map Grid Background -->
+                        <rect width="100%" height="100%" fill="url(#map-grid-pattern)" />
+
+                        <!-- Shadowy street building blocks -->
+                        <g opacity="0.35">
+                            <rect x="25" y="25" width="115" height="95" fill="#181818" rx="4" />
+                            <rect x="165" y="25" width="165" height="95" fill="#181818" rx="4" />
+                            <rect x="355" y="25" width="120" height="215" fill="#181818" rx="4" />
+                            
+                            <rect x="25" y="145" width="115" height="135" fill="#181818" rx="4" />
+                            <rect x="165" y="145" width="165" height="135" fill="#181818" rx="4" />
+                            <rect x="355" y="265" width="120" height="110" fill="#181818" rx="4" />
+                            
+                            <rect x="25" y="305" width="235" height="70" fill="#181818" rx="4" />
+                            <rect x="285" y="305" width="45" height="70" fill="#181818" rx="4" />
+                            
+                            <rect x="25" y="400" width="115" height="75" fill="#181818" rx="4" />
+                            <rect x="165" y="400" width="165" height="75" fill="#181818" rx="4" />
+                            <rect x="355" y="400" width="120" height="75" fill="#181818" rx="4" />
+                        </g>
+
+                        <!-- Roads / Grid lines (gray pathways) -->
+                        <g stroke="rgba(255,255,255,0.06)" fill="none" stroke-linecap="square">
+                            <line x1="0" y1="132" x2="500" y2="132" stroke-width="16" />
+                            <line x1="0" y1="292" x2="500" y2="292" stroke-width="16" />
+                            <line x1="0" y1="387" x2="500" y2="387" stroke-width="16" />
+                            
+                            <line x1="150" y1="0" x2="150" y2="500" stroke-width="16" />
+                            <line x1="342" y1="0" x2="342" y2="500" stroke-width="16" />
+                        </g>
+
+                        <!-- Glowing green perimeter polygon (Claimed Turf) -->
+                        <polygon points="150,132 342,132 342,292 150,292" fill="rgba(184, 255, 0, 0.15)" stroke="#B8FF00" stroke-width="3" filter="url(#glow-green)" class="animated-path" />
+
+                        <!-- Radar sweep line overlay (strictly cosmetic game design) -->
+                        <line x1="150" y1="212" x2="342" y2="212" stroke="rgba(184, 255, 0, 0.4)" stroke-width="1">
+                            <animate attributeName="y1" values="132;292;132" dur="5s" repeatCount="indefinite" />
+                            <animate attributeName="y2" values="132;292;132" dur="5s" repeatCount="indefinite" />
+                        </line>
+
+                        <!-- Center glowing Hotspot indicator -->
+                        <circle cx="246" cy="212" r="5" fill="#B8FF00" />
+                        <circle cx="246" cy="212" r="15" fill="none" stroke="#B8FF00" stroke-width="1.5" opacity="0.7">
+                            <animate attributeName="r" values="5;25;5" dur="3s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0.7;0;0.7" dur="3s" repeatCount="indefinite" />
+                        </circle>
+
+                        <!-- UI corner tag overlay -->
+                        <g transform="translate(180, 185)">
+                            <rect x="0" y="0" width="132" height="22" fill="#0A0A0A" stroke="#B8FF00" stroke-width="1" rx="2" />
+                            <text x="66" y="14" font-family="'DM Mono', monospace" font-size="9" fill="#B8FF00" text-anchor="middle" font-weight="bold">HELD · @GHOST_WALKER</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 02 — HOW IT WORKS -->
+    <section class="section-wrapper" id="how-it-works">
+        <div class="hud-divider reveal">
+            <span class="hud-label">// SECTION_02 // HOW YOU WIN</span>
+            <span class="hud-line"></span>
+            <span class="hud-coords">LAT: 19.0760° N · LNG: 72.8777° E</span>
+        </div>
+        
+        <h2 class="section-title reveal">WALK IT. OWN IT. HOLD IT.</h2>
+        
+        <div class="scroll-row reveal stagger-2">
+            <!-- Step 01 -->
+            <div class="step-card">
+                <div class="step-icon-wrapper">
+                    <!-- Footprints SVG -->
+                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="var(--accent-green)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="3" width="6" height="12" rx="3" />
+                        <rect x="5" y="16" width="6" height="4" rx="2" />
+                        <rect x="13" y="7" width="6" height="12" rx="3" />
+                        <rect x="13" y="20" width="6" height="4" rx="2" />
+                    </svg>
+                </div>
+                <h3 class="step-headline">Do the Claim Walk</h3>
+                <p class="step-body">Walk the full perimeter of a block or zone. Complete it within the required steps and it's yours — marked on the map with your tag.</p>
+                <div class="step-watermark">01</div>
+            </div>
+            
+            <!-- Step 02 -->
+            <div class="step-card">
+                <div class="step-icon-wrapper">
+                    <!-- Location Pin / Hotspot SVG -->
+                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="var(--accent-green)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" stroke-dasharray="3 3" />
+                        <circle cx="12" cy="12" r="4" fill="var(--accent-green)" />
+                        <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                    </svg>
+                </div>
+                <h3 class="step-headline">Drop a Hotspot</h3>
+                <p class="step-body">Spend Block Points to build a virtual Hotspot anywhere in your Turf. Every new visitor earns you Royalties — passive BP, straight to your stack.</p>
+                <div class="step-watermark">02</div>
+            </div>
+            
+            <!-- Step 03 -->
+            <div class="step-card">
+                <div class="step-icon-wrapper">
+                    <!-- Flame / Streak SVG -->
+                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="var(--accent-green)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 3.5 3.5z" />
+                    </svg>
+                </div>
+                <h3 class="step-headline">Keep the Hustle Alive</h3>
+                <p class="step-body">Your Turf needs maintenance. Walk daily. Renew your streak. Miss too many days and you Go Ghost — your Turf opens up for anyone to snatch.</p>
+                <div class="step-watermark">03</div>
+            </div>
+            
+            <!-- Step 04 -->
+            <div class="step-card">
+                <div class="step-icon-wrapper">
+                    <!-- Calendar / Clock SVG -->
+                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="var(--accent-green)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                        <circle cx="12" cy="16" r="2" />
+                    </svg>
+                </div>
+                <h3 class="step-headline">Pay Up on Rent Day</h3>
+                <p class="step-body">Every month is Rent Day. Spend BP to hold your Turfs. High Heat Score zones cost more — but pay back harder.</p>
+                <div class="step-watermark">04</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 03 — THE ECONOMY -->
+    <section class="section-wrapper" id="economy">
+        <div class="hud-divider reveal">
+            <span class="hud-label" style="color: var(--accent-orange)">// SECTION_03 // THE BLOCK POINTS ECONOMY</span>
+            <span class="hud-line" style="background: linear-gradient(90deg, var(--accent-orange) 50%, transparent 100%)"></span>
+            <span class="hud-coords">SEC: [BLOCKPOINTS_METRIC]</span>
+        </div>
+        
+        <h2 class="section-title reveal">EARN. BUILD. FLEX.</h2>
+        
+        <div class="economy-grid reveal stagger-2">
+            <!-- Card 1 -->
+            <div class="economy-card">
+                <div class="economy-hdr">
+                    <span class="economy-tag">BP.STACK</span>
+                    <span class="economy-num">// 01</span>
+                </div>
+                <h3 class="economy-title">EARN</h3>
+                <p class="economy-desc">Stack Block Points (BP) by walking streets, holding Turfs, and collecting Royalties from your Hotspots. The more ground you cover, the richer your stack.</p>
+            </div>
+            
+            <!-- Card 2 -->
+            <div class="economy-card">
+                <div class="economy-hdr">
+                    <span class="economy-tag">BP.CONSTRUCT</span>
+                    <span class="economy-num">// 02</span>
+                </div>
+                <h3 class="economy-title">BUILD</h3>
+                <p class="economy-desc">Spend BP to construct Hotspots on your Corners. Choose your type — food den, chill spot, lookout. Each has a different Royalty multiplier based on the area's Heat Score.</p>
+            </div>
+            
+            <!-- Card 3 -->
+            <div class="economy-card">
+                <div class="economy-hdr">
+                    <span class="economy-tag">BP.MERCH</span>
+                    <span class="economy-num">// 03</span>
+                </div>
+                <h3 class="economy-title">FLEX</h3>
+                <p class="economy-desc">Redeem your BP for real-world perks and discounts at actual shops, cafes, and brands within your Turf. Your Rep score unlocks better deals.</p>
+            </div>
+        </div>
+        
+        <!-- Highlighted Callout Box -->
+        <div class="economy-callout reveal stagger-3">
+            <h2>THE HIGHER THE HEAT SCORE, THE BIGGER THE ROYALTIES — AND THE STEEPER THE RENT.</h2>
+        </div>
+    </section>
+
+    <!-- SECTION 04 — THE MAP -->
+    <section class="section-wrapper" id="map-section">
+        <div class="hud-divider reveal">
+            <span class="hud-label">// SECTION_04 // LIVE TURF MAP</span>
+            <span class="hud-line"></span>
+            <span class="hud-coords">SYS.RENDER: [GRID_OVERLAY_v1]</span>
+        </div>
+        
+        <h2 class="section-title reveal">YOUR CITY. YOUR RULES.</h2>
+        
+        <div class="map-grid-layout">
+            <div class="map-text-side reveal">
+                <!-- Legend items with dynamic highlight connections -->
+                <div class="map-desc-item legend-held">
+                    <span class="legend-color-box bg-green"></span>
+                    <div>
+                        <h4>Green = Held</h4>
+                        <p>You're active, your Hustle is running. Tap zone to inspect stats.</p>
+                    </div>
+                </div>
+                <div class="map-desc-item legend-contested">
+                    <span class="legend-color-box bg-orange"></span>
+                    <div>
+                        <h4>Orange = Contested</h4>
+                        <p>Someone's trying to take your Turf. Challenge active.</p>
+                    </div>
+                </div>
+                <div class="map-desc-item legend-ghost">
+                    <span class="legend-color-box bg-ghost"></span>
+                    <div>
+                        <h4>Gray = Ghost</h4>
+                        <p>The owner went dark. Move fast to claim.</p>
+                    </div>
+                </div>
+                
+                <p class="map-info-text">Every block on the map is claimable.</p>
+                
+                <a href="#download" class="map-cta-link">Explore the live map →</a>
+            </div>
+            
+            <div class="map-preview-side reveal stagger-2">
+                <div class="live-map-card">
+                    <div class="live-map-header">
+                        <span class="live-map-title">HUD.LIVE_CITY_BLOCKS</span>
+                        <span class="live-map-status">ONLINE</span>
+                    </div>
+                    
+                    <div class="live-map-content">
+                        <!-- Stylized SVG Map mockup -->
+                        <svg class="live-map-svg" viewBox="0 0 400 500">
+                            <defs>
+                                <filter id="glow-green-map" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="5" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <filter id="glow-orange-map" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="5" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <filter id="glow-gray-map" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="5" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <pattern id="map-grid-small" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="1" />
+                                </pattern>
+                            </defs>
+
+                            <rect width="100%" height="100%" fill="url(#map-grid-small)" />
+
+                            <!-- Street Blocks Layout -->
+                            <g opacity="0.2">
+                                <rect x="15" y="15" width="100" height="100" fill="#222" rx="3" />
+                                <rect x="130" y="15" width="140" height="100" fill="#222" rx="3" />
+                                <rect x="285" y="15" width="100" height="100" fill="#222" rx="3" />
+
+                                <rect x="15" y="130" width="100" height="150" fill="#222" rx="3" />
+                                <rect x="130" y="130" width="140" height="150" fill="#222" rx="3" />
+                                <rect x="285" y="130" width="100" height="70" fill="#222" rx="3" />
+
+                                <rect x="285" y="215" width="100" height="65" fill="#222" rx="3" />
+
+                                <rect x="15" y="295" width="255" height="90" fill="#222" rx="3" />
+                                <rect x="285" y="295" width="100" height="90" fill="#222" rx="3" />
+
+                                <rect x="15" y="400" width="100" height="85" fill="#222" rx="3" />
+                                <rect x="130" y="400" width="255" height="85" fill="#222" rx="3" />
+                            </g>
+
+                            <!-- Streets Grid -->
+                            <g stroke="rgba(255,255,255,0.05)" fill="none" stroke-width="8">
+                                <line x1="0" y1="122" x2="400" y2="122" />
+                                <line x1="0" y1="287" x2="400" y2="287" />
+                                <line x1="0" y1="392" x2="400" y2="392" />
+                                
+                                <line x1="122" y1="0" x2="122" y2="500" />
+                                <line x1="277" y1="0" x2="277" y2="500" />
+                            </g>
+
+                            <!-- Green Held Polygon -->
+                            <polygon points="15,15 115,15 115,115 15,115" class="map-poly-held" fill="rgba(184,255,0,0.12)" stroke="#B8FF00" stroke-width="2.5" filter="url(#glow-green-map)" cursor="pointer" data-zone="Zone 101" data-status="HELD" data-owner="@street_lord" data-rep="REP 42" data-heat="92%" />
+
+                            <!-- Orange Contested Polygon -->
+                            <polygon points="130,130 270,130 270,280 130,280" class="map-poly-contested" fill="rgba(255,77,0,0.12)" stroke="#FF4D00" stroke-width="2.5" filter="url(#glow-orange-map)" cursor="pointer" data-zone="Zone 204" data-status="CONTESTED" data-owner="@hustler_x vs @sprint" data-rep="REP 89" data-heat="78%" />
+
+                            <!-- Gray Ghost Polygon -->
+                            <polygon points="285,295 385,295 385,385 285,385" class="map-poly-ghost" fill="rgba(128,128,128,0.12)" stroke="#808080" stroke-width="2.5" filter="url(#glow-gray-map)" cursor="pointer" data-zone="Zone 309" data-status="GHOST" data-owner="NONE (ABANDONED)" data-rep="N/A" data-heat="45%" />
+
+                            <!-- UI mini tags on map -->
+                            <g transform="translate(30, 92)" pointer-events="none">
+                                <rect x="0" y="0" width="70" height="15" fill="#0A0A0A" stroke="#B8FF00" stroke-width="1" rx="1" />
+                                <text x="35" y="10" font-family="'DM Mono', monospace" font-size="7" fill="#B8FF00" text-anchor="middle" font-weight="bold">HELD · REP 42</text>
+                            </g>
+
+                            <g transform="translate(150, 255)" pointer-events="none">
+                                <rect x="0" y="0" width="85" height="15" fill="#0A0A0A" stroke="#FF4D00" stroke-width="1" rx="1" />
+                                <text x="42.5" y="10" font-family="'DM Mono', monospace" font-size="7" fill="#FF4D00" text-anchor="middle" font-weight="bold">CONTESTED · WAR</text>
+                            </g>
+
+                            <g transform="translate(295, 355)" pointer-events="none">
+                                <rect x="0" y="0" width="75" height="15" fill="#0A0A0A" stroke="#808080" stroke-width="1" rx="1" />
+                                <text x="37.5" y="10" font-family="'DM Mono', monospace" font-size="7" fill="#808080" text-anchor="middle" font-weight="bold">GHOST · OPEN</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- Overlay Detail Box (Dynamically updates) -->
+                    <div class="map-hud-overlay">
+                        <div class="map-hud-row"><span class="label">ZONE_ID:</span> <span class="val" id="hud-zone-id">Zone 101</span></div>
+                        <div class="map-hud-row"><span class="label">STATUS:</span> <span class="val" id="hud-zone-status" style="color: var(--accent-green);">HELD</span></div>
+                        <div class="map-hud-row"><span class="label">CURRENT_REP:</span> <span class="val" id="hud-zone-rep">REP 42</span></div>
+                        <div class="map-hud-row"><span class="label">HUSTLER:</span> <span class="val" id="hud-zone-owner">@street_lord</span></div>
+                        <div class="map-hud-row"><span class="label">HEAT_LEVEL:</span> <span class="val" id="hud-zone-heat">92%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 05 — HEAT SCORE EXPLAINER -->
+    <section class="section-wrapper" id="heat-score">
+        <div class="hud-divider reveal">
+            <span class="hud-label">// SECTION_05 // THE HEAT SCORE</span>
+            <span class="hud-line"></span>
+            <span class="hud-coords">STAT: [HEAT_SCALE_INDICATOR]</span>
+        </div>
+        
+        <h2 class="section-title reveal">SOME BLOCKS RUN HOT.</h2>
+        
+        <!-- Interactive Heat Score Scale -->
+        <div class="heat-bar-container reveal stagger-2">
+            <div class="heat-stats-hud">
+                <div class="heat-stats-hud-item">ZONE TYPE: <span id="heat-zone-type" style="color: var(--accent-green)">COMMERCIAL STRIP</span></div>
+                <div class="heat-stats-hud-item">ROYALTY MULTIPLIER: <span id="heat-royalty-mult" style="color: var(--accent-green)">2.5X</span></div>
+                <div class="heat-stats-hud-item">EST. RENT COST: <span id="heat-rent-cost" style="color: var(--accent-orange)">120 BP / MO</span></div>
+            </div>
+            
+            <div class="heat-gradient-bar">
+                <div class="heat-indicator" style="left: 52.5%"></div>
+            </div>
+            
+            <div class="heat-scale-labels">
+                <span>COOL SUBURBS (0%)</span>
+                <span>BALANCED (50%)</span>
+                <span>MAX HEAT (100%)</span>
+            </div>
+        </div>
+        
+        <!-- Detailed grid description -->
+        <div class="heat-cols reveal stagger-3">
+            <div class="heat-col-left">
+                <p>High Heat Score areas earn higher Royalties on your Hotspots. More foot traffic = more BP flowing in.</p>
+            </div>
+            <div class="heat-col-right">
+                <p>But Heat costs more to hold on Rent Day. And brands are watching. High-Heat Turfs show up in our Business Intelligence layer — real data sold to real brands making real estate moves.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 06 — SOCIAL / IDENTITY -->
+    <section class="section-wrapper" id="social">
+        <div class="hud-divider reveal">
+            <span class="hud-label">// SECTION_06 // YOUR REP</span>
+            <span class="hud-line"></span>
+            <span class="hud-coords">SEC: [ACTIVE_HUSTLERS_INDEX]</span>
+        </div>
+        
+        <h2 class="section-title reveal">BUILD YOUR NAME ON THESE STREETS.</h2>
+        
+        <div class="player-cards-grid reveal stagger-2">
+            <!-- Player Card 1 -->
+            <div class="player-card">
+                <div class="player-card-header">
+                    <span class="player-username">@ghost_walker</span>
+                    <span class="landlord-badge">LANDLORD</span>
+                </div>
+                <div class="player-stats">
+                    <div class="player-stat-row">
+                        <span class="lbl">REP SCORE:</span>
+                        <span class="val green-text">REP 847</span>
+                    </div>
+                    <div class="player-stat-row">
+                        <span class="lbl">TURFS HELD:</span>
+                        <span class="val">12 TURFS</span>
+                    </div>
+                </div>
+                <div class="streak-label">7-DAY HUSTLE STREAK:</div>
+                <div class="sparkline-container">
+                    <span class="sparkline-bar" style="height: 40%;"></span>
+                    <span class="sparkline-bar" style="height: 60%;"></span>
+                    <span class="sparkline-bar" style="height: 80%;"></span>
+                    <span class="sparkline-bar" style="height: 100%;"></span>
+                    <span class="sparkline-bar" style="height: 100%;"></span>
+                    <span class="sparkline-bar" style="height: 80%;"></span>
+                    <span class="sparkline-bar" style="height: 100%;"></span>
+                </div>
+            </div>
+            
+            <!-- Player Card 2 -->
+            <div class="player-card">
+                <div class="player-card-header">
+                    <span class="player-username">@neon_hustle</span>
+                    <span class="landlord-badge">LANDLORD</span>
+                </div>
+                <div class="player-stats">
+                    <div class="player-stat-row">
+                        <span class="lbl">REP SCORE:</span>
+                        <span class="val green-text">REP 612</span>
+                    </div>
+                    <div class="player-stat-row">
+                        <span class="lbl">TURFS HELD:</span>
+                        <span class="val">8 TURFS</span>
+                    </div>
+                </div>
+                <div class="streak-label">7-DAY HUSTLE STREAK:</div>
+                <div class="sparkline-container">
+                    <span class="sparkline-bar" style="height: 100%;"></span>
+                    <span class="sparkline-bar" style="height: 80%;"></span>
+                    <span class="sparkline-bar" style="height: 0%; border-bottom: 2px solid rgba(255,255,255,0.1);"></span>
+                    <span class="sparkline-bar" style="height: 20%;"></span>
+                    <span class="sparkline-bar" style="height: 60%;"></span>
+                    <span class="sparkline-bar" style="height: 80%;"></span>
+                    <span class="sparkline-bar" style="height: 100%;"></span>
+                </div>
+            </div>
+            
+            <!-- Player Card 3 -->
+            <div class="player-card">
+                <div class="player-card-header">
+                    <span class="player-username">@sole_survivor</span>
+                    <!-- No landlord badge, holds only 3 turfs -->
+                    <span style="height: 17px; display: inline-block;"></span>
+                </div>
+                <div class="player-stats">
+                    <div class="player-stat-row">
+                        <span class="lbl">REP SCORE:</span>
+                        <span class="val green-text">REP 340</span>
+                    </div>
+                    <div class="player-stat-row">
+                        <span class="lbl">TURFS HELD:</span>
+                        <span class="val">3 TURFS</span>
+                    </div>
+                </div>
+                <div class="streak-label">7-DAY HUSTLE STREAK:</div>
+                <div class="sparkline-container">
+                    <span class="sparkline-bar" style="height: 20%;"></span>
+                    <span class="sparkline-bar" style="height: 40%;"></span>
+                    <span class="sparkline-bar" style="height: 60%;"></span>
+                    <span class="sparkline-bar" style="height: 80%;"></span>
+                    <span class="sparkline-bar" style="height: 40%;"></span>
+                    <span class="sparkline-bar" style="height: 20%;"></span>
+                    <span class="sparkline-bar" style="height: 0%; border-bottom: 2px solid rgba(255,255,255,0.1);"></span>
+                </div>
+            </div>
+        </div>
+        
+        <p class="leaderboard-footer reveal stagger-3">The leaderboard is the map. The map is the leaderboard.</p>
+    </section>
+
+    <!-- SECTION 07 — DOWNLOAD CTA -->
+    <section class="section-wrapper download-section" id="download">
+        <div class="hud-divider reveal">
+            <span class="hud-label">// SECTION_07 // THE STOMPING GROUND</span>
+            <span class="hud-line"></span>
+            <span class="hud-coords">STATUS: [WAITLIST_ACTIVE]</span>
+        </div>
+        
+        <div class="download-content reveal stagger-2">
+            <h2 class="download-title">STAKE YOUR CLAIM.</h2>
+            <p class="download-subtitle">Available on iOS and Android. Your Stomping Ground is waiting.</p>
+            
+            <div class="download-buttons">
+                <!-- iOS Download Button -->
+                <a href="#" class="store-btn">
+                    <svg class="store-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M17.05 20.28c-.98.95-2.05 1.88-3.08 1.88-1.02 0-1.4-.62-2.52-.62s-1.54.6-2.52.62c-1.02.02-2.22-1.01-3.2-1.94-2.02-1.9-3.56-5.36-3.56-8.3 0-4.66 3.02-7.12 5.88-7.12 1.08 0 2.1.6 2.76.6.66 0 1.94-.74 3.24-.74 1.36 0 2.6.48 3.4 1.43-3.13 1.88-2.6 5.86.56 7.15-1.04 2.54-2.4 4.54-3.28 5.43m-2.18-15.6c.86-1.04 1.44-2.48 1.28-3.92-1.24.05-2.75.83-3.64 1.87-.79.92-1.48 2.39-1.3 3.8 1.38.1 2.8-.7 3.66-1.75z"/>
+                    </svg>
+                    <div class="store-btn-text">
+                        <span class="store-sub">DOWNLOAD ON THE</span>
+                        <span class="store-main">APP STORE</span>
+                    </div>
+                </a>
+                
+                <!-- Android Download Button -->
+                <a href="#" class="store-btn">
+                    <svg class="store-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M3.6 2.25c-.2.2-.32.48-.32.85v17.8c0 .37.12.65.32.85l.08.08L13.8 12v-.2L3.68 2.17l-.08.08zM17.15 15.35l-3.35-3.35v-.2l3.35-3.35.08.05 3.97 2.26c1.13.64 1.13 1.7 0 2.35l-3.97 2.26-.08-.02zM13.8 11.8L3.68 21.92c.3.3.79.35 1.35.03l12.2-6.95-3.43-3.4zM13.8 12.2l3.43-3.4L5.03 2.05c-.56-.32-1.05-.27-1.35.03L13.8 12.2z"/>
+                    </svg>
+                    <div class="store-btn-text">
+                        <span class="store-sub">GET IT ON</span>
+                        <span class="store-main">GOOGLE PLAY</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Waitlist sign-up input -->
+            <div class="waitlist-container">
+                <a href="#" class="waitlist-trigger" id="waitlist-link">Join the waitlist</a>
+                <form class="waitlist-form" id="waitlist-form" style="display: none;">
+                    <input type="email" id="waitlist-email" placeholder="ENTER YOUR EMAIL" required>
+                    <button type="submit">SUBMIT_CLAIM</button>
+                </form>
+                <div id="waitlist-success" class="waitlist-success-msg" style="display: none;">
+                    // ACCESS GRANTED. WAITLIST POSITION: <span id="waitlist-position">#14,248</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer-wrapper">
+        <div class="footer-inner">
+            TURF © 2025 <span class="footer-dot">·</span> Every street has an owner. <span class="footer-dot">·</span> @playturf
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE JAVASCRIPT CONTROLLERS -->
+    <script>
+        // --- 1. STAGING SOUND SYNTHESISER ---
+        let audioCtx = null;
+        let isAudioOn = false;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        const audioBtn = document.getElementById('audio-toggle');
+        audioBtn.addEventListener('click', () => {
+            initAudio();
+            isAudioOn = !isAudioOn;
+            if (isAudioOn) {
+                audioBtn.innerText = 'HUD_AUDIO: [ON]';
+                audioBtn.classList.add('audio-active');
+                playSynthSuccess();
+            } else {
+                audioBtn.innerText = 'HUD_AUDIO: [OFF]';
+                audioBtn.classList.remove('audio-active');
+            }
+        });
+        
+        function playSynthClick() {
+            if (!isAudioOn || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+            
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+        
+        function playSynthSuccess() {
+            if (!isAudioOn || !audioCtx) return;
+            const now = audioCtx.currentTime;
+            
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(523.25, now); // C5
+            gain1.gain.setValueAtTime(0.03, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.08);
+            
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5
+            gain2.gain.setValueAtTime(0.03, now + 0.08);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(now + 0.08);
+            osc2.stop(now + 0.22);
+        }
+
+        // Attach audio hovers to key interactive elements
+        document.querySelectorAll('button, a, .map-poly-held, .map-poly-contested, .map-poly-ghost, .heat-gradient-bar, .player-card, .step-card, .map-desc-item').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                playSynthClick();
+            });
+        });
+
+        // --- 2. CURSOR TRAIL EFFECT ---
+        const canvas = document.getElementById('cursor-canvas');
+        const ctx = canvas.getContext('2d');
+        let points = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        window.addEventListener('mousemove', (e) => {
+            points.push({
+                x: e.clientX,
+                y: e.clientY,
+                age: 0,
+                maxAge: 20,
+                size: Math.random() * 3 + 2.5
+            });
+        });
+        
+        function animateCursorTrail() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < points.length; i++) {
+                let p = points[i];
+                p.age++;
+                let alpha = 1 - (p.age / p.maxAge);
+                if (alpha <= 0) {
+                    points.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                ctx.fillStyle = `rgba(184, 255, 0, ${alpha * 0.45})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(animateCursorTrail);
+        }
+        animateCursorTrail();
+
+        // --- 3. INTERSECTION OBSERVER REVEAL ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.12
+        };
+        
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.reveal').forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // Stagger subcards within parent rows
+        const staggerRows = document.querySelectorAll('.scroll-row, .economy-grid, .player-cards-grid');
+        staggerRows.forEach(row => {
+            const cards = row.children;
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].classList.add('reveal');
+                cards[i].classList.add(`stagger-${(i % 4) + 1}`);
+                revealObserver.observe(cards[i]);
+            }
+        });
+
+        // --- 4. MAP INTERACTIVITY ---
+        const polyHeld = document.querySelector('.map-poly-held');
+        const polyContested = document.querySelector('.map-poly-contested');
+        const polyGhost = document.querySelector('.map-poly-ghost');
+        
+        const legendHeld = document.querySelector('.legend-held');
+        const legendContested = document.querySelector('.legend-contested');
+        const legendGhost = document.querySelector('.legend-ghost');
+        
+        function updateHudDisplay(poly) {
+            const zone = poly.getAttribute('data-zone');
+            const status = poly.getAttribute('data-status');
+            const owner = poly.getAttribute('data-owner');
+            const rep = poly.getAttribute('data-rep');
+            const heat = poly.getAttribute('data-heat');
+            
+            document.getElementById('hud-zone-id').innerText = zone;
+            
+            const statusEl = document.getElementById('hud-zone-status');
+            statusEl.innerText = status;
+            if (status === 'HELD') {
+                statusEl.style.color = 'var(--accent-green)';
+            } else if (status === 'CONTESTED') {
+                statusEl.style.color = 'var(--accent-orange)';
+            } else {
+                statusEl.style.color = '#808080';
+            }
+            
+            document.getElementById('hud-zone-rep').innerText = rep;
+            document.getElementById('hud-zone-owner').innerText = owner;
+            document.getElementById('hud-zone-heat').innerText = heat;
+        }
+
+        // Polygon hover highlight syncing
+        legendHeld.addEventListener('mouseenter', () => {
+            polyHeld.classList.add('map-highlight');
+        });
+        legendHeld.addEventListener('mouseleave', () => {
+            polyHeld.classList.remove('map-highlight');
+        });
+        legendContested.addEventListener('mouseenter', () => {
+            polyContested.classList.add('map-highlight');
+        });
+        legendContested.addEventListener('mouseleave', () => {
+            polyContested.classList.remove('map-highlight');
+        });
+        legendGhost.addEventListener('mouseenter', () => {
+            polyGhost.classList.add('map-highlight');
+        });
+        legendGhost.addEventListener('mouseleave', () => {
+            polyGhost.classList.remove('map-highlight');
+        });
+
+        // Map Click Action
+        [polyHeld, polyContested, polyGhost].forEach(poly => {
+            poly.addEventListener('click', () => {
+                updateHudDisplay(poly);
+                playSynthSuccess();
+            });
+        });
+
+        // Sync legend item click with map update
+        legendHeld.addEventListener('click', () => { updateHudDisplay(polyHeld); playSynthSuccess(); });
+        legendContested.addEventListener('click', () => { updateHudDisplay(polyContested); playSynthSuccess(); });
+        legendGhost.addEventListener('click', () => { updateHudDisplay(polyGhost); playSynthSuccess(); });
+
+        // --- 5. HEAT SCORE INDICATOR INTERACTIVITY ---
+        const heatBar = document.querySelector('.heat-gradient-bar');
+        const heatIndicator = document.querySelector('.heat-indicator');
+        const typeEl = document.getElementById('heat-zone-type');
+        const multEl = document.getElementById('heat-royalty-mult');
+        const rentEl = document.getElementById('heat-rent-cost');
+        
+        function updateHeatScore(percentage) {
+            heatIndicator.style.left = `${percentage}%`;
+            
+            let type = "QUIET SUBURBS";
+            let mult = "0.5X";
+            let rent = "10 BP / MO";
+            let color = "#00A3FF";
+            
+            if (percentage > 20 && percentage <= 40) {
+                type = "RESIDENTIAL ZONE";
+                mult = "1.2X";
+                rent = "40 BP / MO";
+                color = "#FFFFFF";
+            } else if (percentage > 40 && percentage <= 65) {
+                type = "COMMERCIAL STRIP";
+                mult = "2.5X";
+                rent = "120 BP / MO";
+                color = "var(--accent-green)";
+            } else if (percentage > 65 && percentage <= 85) {
+                type = "HIGH HEAT DOWNTOWN";
+                mult = "4.0X";
+                rent = "450 BP / MO";
+                color = "var(--accent-orange)";
+            } else if (percentage > 85) {
+                type = "ULTRA HEAT METROPOLIS";
+                mult = "8.5X";
+                rent = "1,200 BP / MO";
+                color = "#FF0000";
+            }
+            
+            typeEl.innerText = type;
+            typeEl.style.color = color;
+            multEl.innerText = mult;
+            multEl.style.color = color;
+            rentEl.innerText = rent;
+            rentEl.style.color = color;
+            
+            heatIndicator.style.boxShadow = `0 0 15px ${color}`;
+        }
+
+        // Drag/Move Listener
+        let isDraggingHeat = false;
+        
+        function calculatePercentage(e) {
+            const rect = heatBar.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let percentage = (clientX - rect.left) / rect.width * 100;
+            return Math.max(0, Math.min(100, percentage));
+        }
+
+        heatBar.addEventListener('mousedown', (e) => {
+            isDraggingHeat = true;
+            updateHeatScore(calculatePercentage(e));
+            playSynthClick();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDraggingHeat) {
+                updateHeatScore(calculatePercentage(e));
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDraggingHeat) {
+                isDraggingHeat = false;
+                playSynthSuccess();
+            }
+        });
+
+        // Touch support
+        heatBar.addEventListener('touchstart', (e) => {
+            isDraggingHeat = true;
+            updateHeatScore(calculatePercentage(e));
+            playSynthClick();
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDraggingHeat) {
+                updateHeatScore(calculatePercentage(e));
+            }
+        });
+
+        window.addEventListener('touchend', () => {
+            if (isDraggingHeat) {
+                isDraggingHeat = false;
+                playSynthSuccess();
+            }
+        });
+
+        // --- 6. SOCIAL PLAYER CARD TILT ---
+        document.querySelectorAll('.player-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const xc = rect.width / 2;
+                const yc = rect.height / 2;
+                const angleX = (yc - y) / 12;
+                const angleY = (x - xc) / 12;
+                card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-5px)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
+            });
+        });
+
+        // --- 7. WAITLIST FORM HANDLING ---
+        const waitlistLink = document.getElementById('waitlist-link');
+        const waitlistForm = document.getElementById('waitlist-form');
+        const waitlistSuccess = document.getElementById('waitlist-success');
+        const waitlistPosition = document.getElementById('waitlist-position');
+        
+        waitlistLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            waitlistLink.style.display = 'none';
+            waitlistForm.style.display = 'flex';
+            waitlistForm.querySelector('input').focus();
+            playSynthClick();
+        });
+        
+        waitlistForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('waitlist-email').value;
+            if (email) {
+                const pos = Math.floor(Math.random() * 500) + 14220;
+                waitlistPosition.innerText = `#${pos.toLocaleString()}`;
+                waitlistForm.style.display = 'none';
+                waitlistSuccess.style.display = 'block';
+                playSynthSuccess();
+            }
+        });
+    </script>
+</body>
+</html>
