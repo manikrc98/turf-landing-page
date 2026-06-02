@@ -1,0 +1,120 @@
+<svg id="streetwear-character" viewBox="0 0 160 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- Glow gradient for phone screen -->
+        <radialGradient id="screen-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#B8FF00" stop-opacity="1" />
+            <stop offset="100%" stop-color="#B8FF00" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    
+    <!-- Ground shadow: soft acid-green ellipse with 15% opacity -->
+    <ellipse id="shadow" cx="78" cy="170" rx="26" ry="8" fill="#B8FF00" opacity="0.15" />
+    
+    <!-- BACKGROUND LAYER -->
+    <!-- #leg-left: Background leg and shoe (slightly darker shading for depth) -->
+    <g id="leg-left">
+        <!-- Jogger leg -->
+        <path d="M 72,124 L 68,142 L 70,158" fill="none" stroke="#0F0F11" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Acid-green side stripe (dimmed slightly for background shadow) -->
+        <path d="M 69.5,124 L 65.5,142 L 67.5,158" fill="none" stroke="#7AAB00" stroke-width="1.2" stroke-linejoin="round" />
+        <!-- Jogger cuff -->
+        <ellipse cx="70" cy="158" rx="3.5" ry="1.2" fill="#1C1C1F" />
+        <!-- Chunky grey sneaker -->
+        <path d="M 66,157 Q 72,156 74,160 L 73,165 L 61,164 Q 61,160 66,157 Z" fill="#8A8A93" />
+        <path d="M 61,164 L 73,165 L 72,167 L 62,166 Z" fill="#D4D4D8" />
+        <path d="M 61.5,165 L 72.5,166" stroke="#B8FF00" stroke-width="1" />
+    </g>
+
+    <!-- #arm-left: Background arm (relaxed at side/pumping) -->
+    <g id="arm-left">
+        <!-- Sleeve upper arm -->
+        <path d="M 68,88 L 60,102" stroke="#111216" stroke-width="6.5" stroke-linecap="round" />
+        <!-- Sleeve lower arm -->
+        <path d="M 60,102 L 64,114" stroke="#111216" stroke-width="5.5" stroke-linecap="round" />
+        <!-- Sleeve cuff -->
+        <line x1="63" y1="113" x2="65" y2="115" stroke="#2E303D" stroke-width="5.5" stroke-linecap="round" />
+        <!-- Hand -->
+        <circle cx="65" cy="117" r="2.2" fill="#C68642" />
+    </g>
+
+    <!-- MIDDLE GROUND LAYER -->
+    <!-- #body: Fitted hoodie torso and logo -->
+    <g id="body">
+        <!-- Hoodie back hood -->
+        <path d="M 70,86 Q 79,84 86,88 Q 80,80 70,86" fill="#2B2B35" />
+        <!-- Torso -->
+        <path d="M 68,88 Q 78,90 88,92 L 88,124 Q 80,125 72,124 Z" fill="#1B1C22" />
+        <!-- Left-side shadow styling for isometric 3D shading -->
+        <path d="M 68,88 Q 76,90 77,124 L 72,124 Z" fill="#111216" />
+        <!-- Kangaroo pocket -->
+        <path d="M 74,122 L 86,122 Q 88,114 85,112 L 75,112 Q 72,114 74,122 Z" fill="#15161B" />
+        <line x1="74" y1="117" x2="76" y2="121" stroke="#2B2D37" stroke-width="1" />
+        <line x1="86" y1="117" x2="84" y2="121" stroke="#2B2D37" stroke-width="1" />
+        <!-- Tiny acid-green (#B8FF00) chest logo -->
+        <polygon points="81,98 83,101 81,104 79,101" fill="#B8FF00" />
+    </g>
+
+    <!-- #head: Head, features, tilted cap, AirPod -->
+    <g id="head">
+        <!-- Neck -->
+        <polygon points="77,80 83,80 83,85 77,85" fill="#C68642" />
+        <polygon points="77,80 80,80 80,85 77,85" fill="#A76E33" />
+        <!-- Head base -->
+        <circle cx="80" cy="69" r="10" fill="#C68642" />
+        <!-- Left eye sliver for depth profile -->
+        <ellipse cx="80" cy="66" rx="0.5" ry="1.2" fill="#1C150E" opacity="0.3" />
+        <!-- Right eye -->
+        <ellipse cx="85.5" cy="66" rx="1.2" ry="1.8" fill="#1C150E" />
+        <!-- Right eyebrow -->
+        <path d="M 83.5,63.5 Q 85.5,62.5 87.5,63.5" stroke="#1C150E" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <!-- Nose shadow -->
+        <path d="M 87,69 L 89,70 L 87,71 Z" fill="#A76E33" />
+        <!-- Mouth -->
+        <path d="M 85,73 L 88,72" stroke="#4E2F13" stroke-width="1" stroke-linecap="round" />
+        <!-- Right ear (pointing towards Southeast viewer) -->
+        <circle cx="74" cy="71" r="3" fill="#C68642" />
+        <!-- AirPod in right ear -->
+        <ellipse cx="73" cy="70" rx="1" ry="1.5" fill="#FFFFFF" />
+        <line x1="73" y1="71" x2="74" y2="76" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round" />
+        <!-- Tilted cap brim & dome -->
+        <path d="M 81,63 L 94,56 C 96,55 97,57 95,59 L 83,67 Z" fill="#B8FF00" />
+        <path d="M 70,68 C 68,56 80,53 87,60 C 89,62 89,66 87,68 Z" fill="#1F2026" />
+    </g>
+
+    <!-- FOREGROUND LAYER -->
+    <!-- #leg-right: Foreground leg and shoe -->
+    <g id="leg-right">
+        <!-- Jogger leg -->
+        <path d="M 83,124 L 84,144 L 82,160" fill="none" stroke="#141416" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Acid-green side stripe -->
+        <path d="M 86.5,124 L 87.5,144 L 85.5,160" fill="none" stroke="#B8FF00" stroke-width="1.5" stroke-linejoin="round" />
+        <!-- Jogger cuff -->
+        <ellipse cx="82" cy="160" rx="4" ry="1.5" fill="#242428" />
+        <!-- Chunky grey sneaker with details -->
+        <path d="M 79,159 Q 84,158 87,163 L 89,169 L 76,167 Q 76,163 79,159 Z" fill="#A1A1AA" />
+        <path d="M 76,167 Q 82,167 87,169 L 88,168 L 77,166 Z" fill="#52525B" opacity="0.3" />
+        <path d="M 75,167 Q 83,168 89,169 L 88,172 Q 81,171 74,169 Z" fill="#E4E4E7" />
+        <!-- Acid-green sole stripe -->
+        <path d="M 75.5,168.5 Q 82.5,169.5 88.5,170.5" stroke="#B8FF00" stroke-width="1.2" stroke-linecap="round" />
+        <polygon points="80,160 83,160 84,164 81,164" fill="#3F3F46" />
+    </g>
+
+    <!-- #arm-right: Foreground raised arm holding phone with glowing green screen -->
+    <g id="arm-right">
+        <!-- Glowing green aura from phone screen -->
+        <circle cx="91" cy="80" r="16" fill="url(#screen-glow)" opacity="0.35" style="mix-blend-mode: screen;" />
+        <!-- Arm (hoodie sleeve) -->
+        <path d="M 88,92 Q 100,106 94,90" fill="none" stroke="#1B1C22" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Hand -->
+        <circle cx="93" cy="88" r="2.8" fill="#C68642" />
+        <!-- Phone group (tilted towards face) -->
+        <g transform="translate(93, 88) rotate(-15) translate(-4.5, -16)">
+            <!-- Phone body -->
+            <rect x="0" y="0" width="9" height="15" rx="1.5" fill="#2E2E35" />
+            <!-- Glowing screen -->
+            <rect x="1" y="1" width="7" height="13" rx="0.8" fill="#B8FF00" />
+            <!-- Home bar detail -->
+            <line x1="3.5" y1="14.2" x2="5.5" y2="14.2" stroke="#2E2E35" stroke-width="0.5" />
+        </g>
+    </g>
+</svg>

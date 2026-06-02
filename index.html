@@ -1207,401 +1207,669 @@
             background-color: var(--bg-dark);
             padding: 0;
             margin-top: 40px;
+            height: 600vh;
+            overflow: visible;
         }
-        .scrolly-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            position: relative;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .scrolly-left-cards {
-            display: flex;
-            flex-direction: column;
-            padding: 0 4%;
-            z-index: 10;
-        }
-        .scrolly-card {
-            min-height: 85vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 45px 40px;
-            background-color: var(--card-bg);
-            border-top: 3px solid rgba(184, 255, 0, 0.2);
-            margin: 8vh 0;
-            border-radius: 0 0 6px 6px;
-            border-left: 1px solid rgba(255,255,255,0.02);
-            border-right: 1px solid rgba(255,255,255,0.02);
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            opacity: 0.25;
-            transform: scale(0.96);
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .scrolly-card.active-scrolly-card {
-            opacity: 1;
-            transform: scale(1);
-            border-color: var(--accent-green);
-            box-shadow: 0 10px 40px rgba(184, 255, 0, 0.12);
-        }
-        .scrolly-card-label {
-            font-family: var(--font-ui);
-            font-size: 12px;
-            color: var(--accent-green);
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        .scrolly-card-title {
-            font-family: var(--font-display);
-            font-size: 52px;
-            color: var(--white);
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-            line-height: 1;
-        }
-        .scrolly-card-body {
-            font-family: var(--font-ui);
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--white-muted);
-        }
-        
-        .scrolly-right-canvas {
+        .scrolly-sticky-container {
             position: sticky;
-            top: 70px; /* offset of sticky header */
-            height: calc(100vh - 70px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
-            padding: 20px;
+            background-color: var(--bg-dark);
             z-index: 5;
         }
-        .character-canvas-svg {
+
+        /* SVG Isometric Map Grid styles */
+        #isometric-svg {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            max-height: 480px;
-            max-width: 380px;
-            display: block;
+            overflow: visible;
+        }
+        
+        .street-tile {
+            fill: #1a1a1a;
+            stroke: #2a2a2a;
+            stroke-width: 1;
+            transition: fill 0.6s ease;
+        }
+        .street-tile.visited {
+            fill: #0d250d;
+            stroke: #1b3d1b;
+        }
+        
+        .left-wall {
+            fill: #111111;
+            stroke: rgba(255, 255, 255, 0.02);
+            stroke-width: 0.5;
+            transition: fill 0.6s ease;
+        }
+        .right-wall {
+            fill: #0c0c0c;
+            stroke: rgba(255, 255, 255, 0.02);
+            stroke-width: 0.5;
+            transition: fill 0.6s ease;
+        }
+        .roof {
+            fill: #181818;
+            stroke: rgba(255, 255, 255, 0.04);
+            stroke-width: 0.8;
+            transition: fill 0.6s ease, stroke 0.6s ease, filter 0.6s ease;
+        }
+        .block-tile {
+            cursor: pointer;
+        }
+        .block-tile:hover .roof {
+            stroke: #B8FF00;
+            filter: drop-shadow(0 0 4px rgba(184, 255, 0, 0.7));
+        }
+        .block-tile.claimed:hover .roof {
+            fill: #0f3d0f;
+            stroke: #d0ff33;
+            filter: drop-shadow(0 0 6px rgba(184, 255, 0, 0.9));
+        }
+        
+        /* Central Claimed turf styles */
+        .claimed .roof {
+            fill: #0a250a;
+            stroke: #B8FF00;
+            stroke-width: 1;
+            filter: drop-shadow(0 0 2px rgba(184, 255, 0, 0.3));
+        }
+        .claimed .left-wall {
+            fill: #0e1e0e;
+        }
+        .claimed .right-wall {
+            fill: #091709;
+        }
+        
+        /* Flicker state for Rent Day */
+        .flickering .roof {
+            animation: rent-flicker-roof 1.5s infinite alternate;
+        }
+        .flickering .left-wall {
+            animation: rent-flicker-left 1.5s infinite alternate;
+        }
+        .flickering .right-wall {
+            animation: rent-flicker-right 1.5s infinite alternate;
+        }
+        @keyframes rent-flicker-roof {
+            0%, 100% { fill: #0a250a; stroke: #B8FF00; }
+            50% { fill: #181818; stroke: rgba(255, 255, 255, 0.04); }
+        }
+        @keyframes rent-flicker-left {
+            0%, 100% { fill: #0e1e0e; }
+            50% { fill: #111111; }
+        }
+        @keyframes rent-flicker-right {
+            0%, 100% { fill: #091709; }
+            50% { fill: #0c0c0c; }
         }
 
-        /* --- CHARACTER POSTURES & ASSETS GENERAL --- */
-        .char-standing-legs, .char-walking-legs,
-        .arm-standard, .arm-victory, .arm-slouch, .arm-confident {
-            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Go Ghost (desaturated, back to dull grey) */
+        .ghost .roof {
+            fill: #181818;
+            stroke: rgba(255, 255, 255, 0.04);
+            filter: none;
+        }
+        .ghost .left-wall {
+            fill: #111111;
+        }
+        .ghost .right-wall {
+            fill: #0c0c0c;
+        }
+        
+        /* Snap flash */
+        .flash .roof {
+            animation: flash-anim 0.6s ease-out 1;
+        }
+        @keyframes flash-anim {
+            0% { fill: #B8FF00; stroke: #fff; }
+            100% { fill: #0a250a; stroke: #B8FF00; }
+        }
+        
+        /* Turf perimeter polygon */
+        #turf-polygon {
+            fill: transparent;
+            stroke: #B8FF00;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease, fill 300ms ease;
+        }
+        #turf-polygon.claimed {
+            opacity: 1;
+            fill: rgba(184, 255, 0, 0.12);
+            stroke: #B8FF00;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 6px #B8FF00);
+        }
+        #turf-polygon.flickering {
+            opacity: 1;
+            fill: rgba(184, 255, 0, 0.12);
+            stroke: #B8FF00;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 6px #B8FF00);
+            animation: poly-flicker 1.5s infinite alternate;
+        }
+        @keyframes poly-flicker {
+            0% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        #turf-polygon.ghost {
+            opacity: 0;
+            fill: transparent;
+        }
+        #turf-polygon.flash {
+            opacity: 1;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 6px #B8FF00);
+            animation: poly-flash-anim 0.6s ease-out 1;
+        }
+        @keyframes poly-flash-anim {
+            0% { fill: rgba(184, 255, 0, 0.8); }
+            100% { fill: rgba(184, 255, 0, 0.12); }
         }
 
-        .char-upper-body {
-            transform-origin: 200px 280px;
-            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Claim walk dynamic trail pulsing */
+        #claim-walk-trail {
+            animation: trail-pulse 1.5s infinite alternate ease-in-out;
         }
-        .char-head {
-            transform-origin: 200px 140px;
-            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        @keyframes trail-pulse {
+            0% { stroke-opacity: 0.7; }
+            100% { stroke-opacity: 1.0; }
         }
 
-        /* --- DEFAULT SCENE ASSET HIDDEN STATES --- */
-        .char-walking-legs, .arm-victory, .arm-slouch, .arm-confident,
-        .phone-map-scene1, .phone-map-scene2, .phone-map-scene4,
-        .scene-2-steps, .scene-3-burst, .scene-3-badge,
-        .scene-4-coins, .scene-4-card, .scene-5-warning,
-        .scene6-substate-a, .scene6-substate-b {
+        /* Concentric Sonar Pulses */
+        .pulse-poly {
+            opacity: 0;
+            transform-origin: 0px 120px;
+        }
+        .active-claim-pulses .pulse-poly-1 {
+            animation: claim-pulse-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .active-claim-pulses .pulse-poly-2 {
+            animation: claim-pulse-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+        }
+        .active-claim-pulses .pulse-poly-3 {
+            animation: claim-pulse-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+
+        @keyframes claim-pulse-anim {
+            0% {
+                transform: scale(1.0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.4);
+                opacity: 0;
+            }
+        }
+
+        /* Footsteps */
+        .footstep-mark {
             opacity: 0;
             pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
-        /* --- SCENE-SPECIFIC VISIBILITY OVERRIDES --- */
+        /* Character group and states */
+        .character-group {
+            pointer-events: none;
+            transition: opacity 0.6s ease, filter 0.6s ease;
+        }
+        .character-group.desaturated {
+            filter: saturate(0) opacity(0.25);
+        }
         
-        /* Scene 1: Waiting */
-        [data-scene="1"] .char-standing-legs { opacity: 1; }
-        [data-scene="1"] .arm-standard { opacity: 1; }
-        [data-scene="1"] .phone-map-scene1 { opacity: 1; }
-        [data-scene="1"] .char-wrapper {
-            animation: char-sway 3s ease-in-out infinite;
-        }
-        [data-scene="1"] .map-cursor {
-            animation: cursor-blink 1s step-end infinite;
+        /* Flipping the visual wrapper */
+        .character-group.flipped .character-visual-wrapper {
+            transform: scaleX(-1);
+            transform-origin: 0px 0px;
         }
 
-        /* Scene 2: Stride */
-        [data-scene="2"] .char-walking-legs { opacity: 1; }
-        [data-scene="2"] .char-standing-legs { opacity: 0; }
-        [data-scene="2"] .arm-standard { opacity: 1; }
-        [data-scene="2"] .phone-map-scene2 { opacity: 1; }
-        [data-scene="2"] .scene-2-steps { opacity: 1; }
-        [data-scene="2"] .step-dot-1 {
-            animation: footstep-fade 1.5s infinite;
+        /* --- REDESIGNED CHARACTER ANIMATIONS --- */
+
+        /* 1. WALKING ANIMATION */
+        .character-group.walking .left-leg-group {
+            animation: char-walk-left-leg 0.42s ease-in-out infinite;
+            transform-origin: -4px -46px;
         }
-        [data-scene="2"] .step-dot-2 {
-            animation: footstep-fade 1.5s infinite 0.5s;
+        .character-group.walking .right-leg-group {
+            animation: char-walk-right-leg 0.42s ease-in-out infinite;
+            transform-origin: 6px -46px;
         }
-        [data-scene="2"] .step-dot-3 {
-            animation: footstep-fade 1.5s infinite 1.0s;
+        .character-group.walking .left-arm-group {
+            animation: char-walk-left-arm 0.42s ease-in-out infinite;
+            transform-origin: -10px -82px;
         }
-        [data-scene="2"] .phone-dash-polygon {
-            animation: draw-polygon-loop 2s linear infinite;
+        .character-group.walking .right-arm-group {
+            animation: char-walk-right-arm 0.42s ease-in-out infinite;
+            transform-origin: 10px -78px;
+        }
+        .character-group.walking .body-group,
+        .character-group.walking .head-group {
+            animation: char-walk-body 0.42s ease-in-out infinite;
         }
 
-        /* Scene 3: Claimed */
-        [data-scene="3"] .char-standing-legs { opacity: 1; }
-        [data-scene="3"] .arm-victory { opacity: 1; }
-        [data-scene="3"] .scene-3-burst { opacity: 1; }
-        [data-scene="3"] .scene-3-badge {
-            animation: badge-bounce-in 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        @keyframes char-walk-left-leg {
+            0%, 100% { transform: rotate(-12deg); }
+            50% { transform: rotate(14deg); }
         }
-        [data-scene="3"] .burst-line {
-            animation: burst-expand-loop 2s infinite ease-out;
+        @keyframes char-walk-right-leg {
+            0%, 100% { transform: rotate(14deg); }
+            50% { transform: rotate(-12deg); }
+        }
+        @keyframes char-walk-left-arm {
+            0%, 100% { transform: rotate(16deg); }
+            50% { transform: rotate(-16deg); }
+        }
+        @keyframes char-walk-right-arm {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+        @keyframes char-walk-body {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
         }
 
-        /* Scene 4: Hotspot */
-        [data-scene="4"] .char-standing-legs { opacity: 1; }
-        [data-scene="4"] .arm-standard { opacity: 1; }
-        [data-scene="4"] .phone-map-scene4 { opacity: 1; }
-        [data-scene="4"] .scene-4-coins { opacity: 1; }
-        [data-scene="4"] .scene-4-card {
+        /* 2. IDLE ANIMATION */
+        .character-group.idle .character-visual-wrapper {
+            animation: char-idle-weight 2.5s ease-in-out infinite;
+        }
+        .character-group.idle .right-arm-group {
+            animation: char-idle-tap 2.5s ease-in-out infinite;
+            transform-origin: 10px -78px;
+        }
+        .character-group.idle #shadow,
+        .character-group.idle .character-shadow {
+            animation: char-idle-shadow 2.5s ease-in-out infinite;
+            transform-origin: 0px 0px;
+        }
+        @keyframes char-idle-weight {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes char-idle-tap {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(2deg); }
+        }
+        @keyframes char-idle-shadow {
+            0%, 100% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(0.85); opacity: 0.08; }
+        }
+
+        /* 3. CELEBRATING ANIMATION */
+        .character-group.celebrating .character-visual-wrapper {
+            animation: char-celebrate-jump 0.85s cubic-bezier(0.25, 1.4, 0.45, 1.4) 1 forwards;
+        }
+        .character-group.celebrating #shadow,
+        .character-group.celebrating .character-shadow {
+            animation: char-celebrate-shadow 0.85s cubic-bezier(0.25, 1.4, 0.45, 1.4) 1 forwards;
+            transform-origin: 0px 0px;
+        }
+        @keyframes char-celebrate-jump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-18px); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes char-celebrate-shadow {
+            0% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(0.6); opacity: 0.05; }
+            100% { transform: scale(1); opacity: 0.15; }
+        }
+
+        /* 4. TAPPING ANIMATION */
+        .character-group.tapping .right-arm-group {
+            animation: char-tap-arm 0.55s ease-in-out infinite;
+            transform-origin: 10px -78px;
+        }
+        .character-group.tapping .head-group {
+            animation: char-tap-head 0.55s ease-in-out infinite;
+            transform-origin: 2px -90px;
+        }
+        @keyframes char-tap-arm {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-15deg) translateY(-2px); }
+        }
+        @keyframes char-tap-head {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg) translateY(1px); }
+        }
+
+        /* 5. SLOUCH ANIMATION (Act 5 compatibility) */
+        .character-group.slouch .body-group {
+            animation: char-slouch-float 2.0s ease-in-out infinite alternate;
+        }
+        @keyframes char-slouch-float {
+            0% { transform: translateY(3px); }
+            100% { transform: translateY(1px); }
+        }
+
+        /* Ripples */
+        #ripple-group {
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        #ripple-group.active-ripple {
             opacity: 1;
-            transform: scale(1);
         }
-        [data-scene="4"] .coin-1 {
-            animation: coin-drift-loop 2s infinite ease-out;
+        #ripple-group.active-ripple .ripple-diamond {
+            transform-origin: 0px 0px;
         }
-        [data-scene="4"] .coin-2 {
-            animation: coin-drift-loop 2s infinite ease-out 0.6s;
+        #ripple-group.active-ripple .ripple-1 {
+            animation: ripple-expand-1 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
         }
-        [data-scene="4"] .coin-3 {
-            animation: coin-drift-loop 2s infinite ease-out 1.2s;
+        #ripple-group.active-ripple .ripple-2 {
+            animation: ripple-expand-2 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) 0.1s forwards;
         }
-        [data-scene="4"] .phone-pulse-pin {
-            animation: pin-pulse-loop 1.5s infinite ease-out;
+        #ripple-group.active-ripple .ripple-3 {
+            animation: ripple-expand-3 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) 0.2s forwards;
         }
-
-        /* Scene 5: Rent Day Slouch */
-        [data-scene="5"] .char-standing-legs { opacity: 1; }
-        [data-scene="5"] .arm-slouch { opacity: 1; }
-        [data-scene="5"] .scene-5-warning {
-            opacity: 1;
-            transform: translateY(0);
-            animation: warning-glow-pulse 2s infinite ease-in-out;
+        #ripple-group.active-ripple.large-ripple .ripple-1 {
+            animation: ripple-expand-large-1 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
         }
-        [data-scene="5"] .char-upper-body {
-            transform: translateY(8px) rotate(4deg);
+        #ripple-group.active-ripple.large-ripple .ripple-2 {
+            animation: ripple-expand-large-2 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) 0.1s forwards;
         }
-        [data-scene="5"] .char-head {
-            transform: translateY(3px) rotate(12deg);
+        #ripple-group.active-ripple.large-ripple .ripple-3 {
+            animation: ripple-expand-large-3 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) 0.2s forwards;
         }
-        [data-scene="5"] .scrolly-bg-blocks {
-            animation: flicker-blocks-loop 1s infinite ease-in-out;
+        @keyframes ripple-expand-1 {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(2.0); opacity: 0; }
         }
-
-        /* Scene 6: Alternating Loop (Confident vs Ghost) */
-        [data-scene="6"] .char-standing-legs { opacity: 1; }
-        [data-scene="6"] .arm-confident { opacity: 1; }
-        [data-scene="6"] .char-wrapper {
-            animation: char-ghost-fade-loop 4s infinite;
+        @keyframes ripple-expand-2 {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(3.0); opacity: 0; }
         }
-        [data-scene="6"] .scene6-substate-a {
-            animation: substate-a-opacity-loop 4s infinite;
+        @keyframes ripple-expand-3 {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(4.0); opacity: 0; }
         }
-        [data-scene="6"] .scene6-substate-b {
-            animation: substate-b-opacity-loop 4s infinite;
+        @keyframes ripple-expand-large-1 {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(3.0); opacity: 0; }
         }
-        [data-scene="6"] .scene6-blocks-glow {
-            animation: blocks-ghost-glow-loop 4s infinite;
+        @keyframes ripple-expand-large-2 {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(4.5); opacity: 0; }
         }
-        [data-scene="6"] .scene6-phone-body {
-            animation: scene6-phone-stroke-fade-loop 4s infinite;
-        }
-        [data-scene="6"] .scene6-phone-screen {
-            animation: scene6-phone-fill-fade-loop 4s infinite;
-        }
-        [data-scene="6"] .scene6-phone-map,
-        [data-scene="6"] .scene6-phone-flame {
-            animation: scene6-phone-elements-fade-loop 4s infinite;
+        @keyframes ripple-expand-large-3 {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(6.0); opacity: 0; }
         }
 
-        /* --- STAGE BACKGROUND BLOCK DESIGNS --- */
-        .scene-block-item {
-            fill: none;
-            stroke: rgba(255, 255, 255, 0.05);
-            stroke-width: 1.5;
-            transition: stroke 0.4s ease, filter 0.4s ease;
+        /* Hotspot */
+        #hotspot-group {
+            transition: opacity 0.4s ease;
         }
-        [data-scene="2"] .scene-block-item {
-            stroke: rgba(184, 255, 0, 0.2);
+        .hotspot-pin {
+            transform-origin: 0px 10px;
+            animation: hotspot-pin-pulse 1.5s infinite ease-in-out;
         }
-        [data-scene="3"] .scene-block-item,
-        [data-scene="4"] .scene-block-item {
-            stroke: var(--accent-green);
-            filter: drop-shadow(0 0 4px var(--accent-green));
-            opacity: 0.6;
+        @keyframes hotspot-pin-pulse {
+            0%, 100% { transform: scale(1.0); }
+            50% { transform: scale(1.25); }
         }
-        [data-scene="5"] .scene-block-item {
-            stroke: rgba(255, 77, 0, 0.25);
-            filter: drop-shadow(0 0 2px var(--accent-orange));
-        }
-
-        /* --- COMPOSITOR ANIMATIONS KEYFRAMES --- */
         
-        /* Default state paused style */
-        .char-wrapper, .map-cursor, .step-dot-1, .step-dot-2, .step-dot-3,
-        .phone-dash-polygon, .scene-3-badge, .burst-line, .coin-1, .coin-2, .coin-3,
-        .phone-pulse-pin, .scene-5-warning, .scrolly-bg-blocks, .scene6-substate-a,
-        .scene6-substate-b, .scene6-blocks-glow, .scene6-phone-body, .scene6-phone-screen,
-        .scene6-phone-map, .scene6-phone-flame {
-            animation-play-state: paused;
+        .coin-text {
+            opacity: 0;
+        }
+        .active-hotspot .coin-1 {
+            animation: coin-drift-1 1.2s infinite linear;
+        }
+        .active-hotspot .coin-2 {
+            animation: coin-drift-2 1.2s infinite linear 0.6s;
+        }
+        @keyframes coin-drift-1 {
+            0% { transform: translate(0px, -20px) scale(0.7); opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translate(0px, -60px) scale(1.1); opacity: 0; }
+        }
+        @keyframes coin-drift-2 {
+            0% { transform: translate(0px, -20px) scale(0.7); opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translate(0px, -60px) scale(1.1); opacity: 0; }
         }
 
-        /* Set running when corresponding data-scene is set */
-        [data-scene="1"] .char-wrapper,
-        [data-scene="1"] .map-cursor,
-        [data-scene="2"] .step-dot-1, [data-scene="2"] .step-dot-2, [data-scene="2"] .step-dot-3,
-        [data-scene="2"] .phone-dash-polygon,
-        [data-scene="3"] .scene-3-badge, [data-scene="3"] .burst-line,
-        [data-scene="4"] .coin-1, [data-scene="4"] .coin-2, [data-scene="4"] .coin-3,
-        [data-scene="4"] .phone-pulse-pin,
-        [data-scene="5"] .scene-5-warning, [data-scene="5"] .scrolly-bg-blocks,
-        [data-scene="6"] .char-wrapper, [data-scene="6"] .scene6-substate-a,
-        [data-scene="6"] .scene6-substate-b, [data-scene="6"] .scene6-blocks-glow,
-        [data-scene="6"] .scene6-phone-body, [data-scene="6"] .scene6-phone-screen,
-        [data-scene="6"] .scene6-phone-map, [data-scene="6"] .scene6-phone-flame {
-            animation-play-state: running;
-        }
-
-        @keyframes char-sway {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(2px); }
-        }
-        @keyframes cursor-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-        @keyframes footstep-fade {
-            0% { opacity: 0; transform: scale(0.6); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-            100% { opacity: 0; transform: scale(0.6); }
-        }
-        @keyframes draw-polygon-loop {
-            to { stroke-dashoffset: 0; }
-        }
-        @keyframes badge-bounce-in {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes burst-expand-loop {
-            0% { opacity: 0; stroke-dasharray: 0 100; stroke-dashoffset: 0; }
-            20% { opacity: 1; stroke-dasharray: 10 100; stroke-dashoffset: 0; }
-            80%, 100% { opacity: 0; stroke-dasharray: 10 100; stroke-dashoffset: -20; }
-        }
-        @keyframes coin-drift-loop {
-            0% { opacity: 0; transform: translateY(0) scale(0.7); }
-            25% { opacity: 0.9; }
-            100% { opacity: 0; transform: translateY(-40px) scale(1.1); }
-        }
-        @keyframes pin-pulse-loop {
-            0% { transform: scale(0.7); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(0.7); }
-        }
-        @keyframes warning-glow-pulse {
-            0%, 100% { filter: drop-shadow(0 0 2px var(--accent-orange)); }
-            50% { filter: drop-shadow(0 0 8px var(--accent-orange)); }
-        }
-        @keyframes flicker-blocks-loop {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.15; }
-        }
-
-        /* Scene 6 Loop timings */
-        @keyframes char-ghost-fade-loop {
-            0%, 60% { opacity: 1; filter: none; }
-            65%, 95% { opacity: 0.3; filter: grayscale(1); }
-            100% { opacity: 1; filter: none; }
-        }
-        @keyframes substate-a-opacity-loop {
-            0%, 60% { opacity: 1; }
-            65%, 95% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-        @keyframes substate-b-opacity-loop {
-            0%, 60% { opacity: 0; transform: translateY(0); }
-            65% { opacity: 1; transform: translateY(0); }
-            90%, 95% { opacity: 0; transform: translateY(-30px); }
-            100% { opacity: 0; transform: translateY(0); }
-        }
-        @keyframes blocks-ghost-glow-loop {
-            0%, 60% { filter: drop-shadow(0 0 4px var(--accent-green)); stroke: var(--accent-green); }
-            65%, 95% { filter: none; stroke: rgba(255,255,255,0.05); }
-            100% { filter: drop-shadow(0 0 4px var(--accent-green)); stroke: var(--accent-green); }
-        }
-        @keyframes scene6-phone-stroke-fade-loop {
-            0%, 60% { stroke: var(--accent-green); }
-            65%, 95% { stroke: #808080; }
-            100% { stroke: var(--accent-green); }
-        }
-        @keyframes scene6-phone-fill-fade-loop {
-            0%, 60% { fill: #000; }
-            65%, 95% { fill: #0a0a0a; }
-            100% { fill: #000; }
-        }
-        @keyframes scene6-phone-elements-fade-loop {
-            0%, 60% { opacity: 1; }
-            65%, 95% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        /* --- BRIDGE TEXT --- */
-        .scrolly-bridge-wrapper {
-            padding: 80px 4% 40px;
-            text-align: center;
-            max-width: 1200px;
-            margin: 0 auto;
+        /* HTML overlays and HUD styles */
+        .hud-overlay-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
-        .scrolly-bridge-text {
+        .hud-card, .hud-badge-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+            max-width: 550px;
+            width: 90%;
+            box-sizing: border-box;
+        }
+        .hud-card {
+            background: rgba(17, 17, 17, 0.85);
+            border: 1px solid rgba(184, 255, 0, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px 35px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(184, 255, 0, 0.05);
+            transform: translate(-50%, 20px);
+        }
+        .hud-card.active, .hud-badge-container.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+            pointer-events: auto;
+        }
+        
+        /* Bouncy drop for Act 3 Claimed badge */
+        .hud-badge-container {
+            transform: translate(-50%, -150px);
+            transition: opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hud-badge-container.active {
+            transform: translate(-50%, 0) !important;
+        }
+        
+        .hud-label {
+            font-family: var(--font-label);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-green);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .hud-title {
             font-family: var(--font-display);
+            font-size: 56px;
+            line-height: 1.0;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            color: var(--white);
+        }
+        .hud-title.large-title {
             font-size: 80px;
             color: var(--accent-green);
-            text-shadow: 0 0 15px rgba(184, 255, 0, 0.4);
-            margin: 0;
-            line-height: 1;
-            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(184, 255, 0, 0.3);
+        }
+        .hud-desc {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            color: var(--white-muted);
+            line-height: 1.5;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+        
+        /* Badges */
+        .hud-badge {
+            padding: 10px 24px;
+            background: #111;
+            border: 1.5px solid var(--accent-green);
+            color: var(--accent-green);
+            font-family: var(--font-display);
+            font-size: 28px;
+            border-radius: 50px;
+            text-shadow: 0 0 10px rgba(184, 255, 0, 0.5);
+            box-shadow: 0 0 20px rgba(184, 255, 0, 0.2), inset 0 0 10px rgba(184, 255, 0, 0.1);
+            margin: 0 auto;
+            display: inline-block;
+            letter-spacing: 1px;
+        }
+        .hud-stats-row {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--white-muted);
+            margin-top: 12px;
+            letter-spacing: 1px;
         }
 
-        /* Media Queries for Scrollytelling stack */
+        /* Accent classes */
+        .orange-accent {
+            border-color: rgba(255, 77, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 77, 0, 0.05);
+        }
+        .orange-accent .hud-label {
+            color: var(--accent-orange);
+        }
+        .orange-accent .hud-title {
+            color: var(--accent-orange);
+        }
+        .orange-badge {
+            border-color: var(--accent-orange) !important;
+            color: var(--accent-orange) !important;
+            text-shadow: 0 0 10px rgba(255, 77, 0, 0.5) !important;
+            box-shadow: 0 0 20px rgba(255, 77, 0, 0.2), inset 0 0 10px rgba(255, 77, 0, 0.1) !important;
+            font-size: 20px !important;
+            margin-top: 15px;
+        }
+        .pulsing {
+            animation: badge-pulse 1.5s infinite alternate;
+        }
+        @keyframes badge-pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; transform: scale(1.03); }
+        }
+        
+        .grey-accent {
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .grey-accent .hud-desc {
+            color: #888;
+        }
+
+        .green-badge {
+            border-color: var(--accent-green) !important;
+            color: var(--accent-green) !important;
+            font-size: 20px !important;
+            margin-top: 15px;
+        }
+
+        /* Background overlays */
+        .act-1-scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(184, 255, 0, 0) 0%,
+                rgba(184, 255, 0, 0.05) 50%,
+                rgba(184, 255, 0, 0) 100%
+            );
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .scrolly-sticky-container.state-act1 .act-1-scanline {
+            opacity: 1;
+            animation: scanline-sweep 3.5s linear infinite;
+        }
+        @keyframes scanline-sweep {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        
+        .scene-orange-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--accent-orange);
+            mix-blend-mode: color;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 8;
+        }
+        .scrolly-sticky-container.state-act5 .scene-orange-overlay {
+            opacity: 0.06;
+        }
+        
+        /* Bridge text at the end of scrolly */
+        .scrolly-bridge-container-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+            z-index: 99;
+            pointer-events: none;
+        }
+        .scrolly-bridge-container-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .scrolly-bridge-container-overlay h2 {
+            font-family: var(--font-display);
+            font-size: 96px;
+            color: var(--accent-green);
+            text-shadow: 0 0 25px rgba(184, 255, 0, 0.5);
+            margin: 0;
+            line-height: 1.0;
+            letter-spacing: 2px;
+            padding: 0 20px;
+        }
+
+        /* Responsive overrides */
         @media (max-width: 768px) {
-            .scrolly-container {
-                grid-template-columns: 1fr;
+            .hud-title {
+                font-size: 40px;
             }
-            .scrolly-right-canvas {
-                position: sticky;
-                top: 60px; /* underneath header */
-                height: 38vh;
-                width: 100%;
-                background-color: var(--bg-dark);
-                border-bottom: 1px solid rgba(184, 255, 0, 0.15);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-                padding: 10px;
+            .hud-title.large-title {
+                font-size: 56px;
             }
-            .character-canvas-svg {
-                max-height: 100%;
-                max-width: 280px;
+            .hud-card {
+                padding: 20px;
             }
-            .scrolly-left-cards {
-                padding: 0 4%;
-                margin-top: 30px;
-            }
-            .scrolly-card {
-                min-height: auto;
-                margin: 40px 0;
-                padding: 30px 24px;
-            }
-            .scrolly-card-title {
-                font-size: 38px;
-            }
-            .scrolly-bridge-text {
+            .scrolly-bridge-container-overlay h2 {
                 font-size: 56px;
             }
         }
@@ -1626,7 +1894,7 @@
                 <span class="hud-stat-item">BLOCKS_HELD: 42,912</span>
             </div>
             <div class="hud-controls">
-                <button class="hud-audio-btn" id="audio-toggle">HUD_AUDIO: [OFF]</button>
+                <button class="hud-audio-btn audio-active" id="audio-toggle">HUD_AUDIO: [ON]</button>
                 <div class="hud-battery">
                     <span class="battery-bar"></span>
                     <span class="battery-bar"></span>
@@ -1733,266 +2001,380 @@
     </section>
 
     <!-- SECTION: SCROLLYTELLING NARRATIVE -->
+    <!-- SECTION: SCROLLYTELLING NARRATIVE -->
     <section class="scrolly-section" id="scrolly-narrative">
-        <div class="scrolly-container">
-            
-            <!-- LEFT: Tall scrollable column of scene cards -->
-            <div class="scrolly-left-cards">
-                <!-- Card 1 -->
-                <div class="scrolly-card" data-scene-trigger="1">
-                    <div class="scrolly-card-label">// SCENE_01</div>
-                    <h3 class="scrolly-card-title">THE MAP IS EMPTY.</h3>
-                    <p class="scrolly-card-body">Every street around you is unclaimed. Grey. Dead. Wide open for whoever shows up first.</p>
+        <div class="scrolly-sticky-container" id="scrolly-sticky-container">
+            <!-- SVG Isometric World Canvas -->
+            <svg id="isometric-svg" width="100%" height="100%" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                    <!-- Ambient green radial gradient for character glow -->
+                    <radialGradient id="character-glow-radial" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#B8FF00" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="#B8FF00" stop-opacity="0" />
+                    </radialGradient>
+                    
+                    <!-- Glow gradient for phone screen -->
+                    <radialGradient id="screen-glow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#B8FF00" stop-opacity="1" />
+                        <stop offset="100%" stop-color="#B8FF00" stop-opacity="0" />
+                    </radialGradient>
+                    
+                    <!-- Glow filters -->
+                    <filter id="glow-green-scrolly" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="5" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <filter id="glow-orange-scrolly" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="5" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Camera Group -->
+                <g id="camera-group" style="will-change: transform;">
+                    <!-- Background Parallax Group -->
+                    <g id="bg-parallax-group" style="will-change: transform;"></g>
+                    
+                    <!-- Main Grid Group -->
+                    <g id="main-grid-group"></g>
+                    
+                    <!-- Footsteps / Trails Group -->
+                    <g id="footsteps-group">
+                        <path id="footstep-1" class="footstep-mark" d="M -5,2.5 L 0,-2.5 L 5,2.5" stroke="#B8FF00" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                        <path id="footstep-2" class="footstep-mark" d="M -5,2.5 L 0,-2.5 L 5,2.5" stroke="#B8FF00" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                        <path id="footstep-3" class="footstep-mark" d="M -5,2.5 L 0,-2.5 L 5,2.5" stroke="#B8FF00" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                    </g>
+                    
+                    <!-- Claim Walk Trail & Pulses -->
+                    <g id="claim-walk-trail" stroke="#B8FF00" stroke-width="3" filter="drop-shadow(0 0 6px #B8FF00)" style="stroke-linecap: round; pointer-events: none;">
+                        <!-- Pre-created line elements for performance will go here via JS -->
+                    </g>
+                    
+                    <g id="claim-close-pulses" style="pointer-events: none;">
+                        <polygon class="pulse-poly pulse-poly-1" points="0,0 180,90 0,180 -180,90" fill="none" stroke="#B8FF00" stroke-width="3" filter="drop-shadow(0 0 6px #B8FF00)" />
+                        <polygon class="pulse-poly pulse-poly-2" points="0,0 180,90 0,180 -180,90" fill="none" stroke="#B8FF00" stroke-width="3" filter="drop-shadow(0 0 6px #B8FF00)" />
+                        <polygon class="pulse-poly pulse-poly-3" points="0,0 180,90 0,180 -180,90" fill="none" stroke="#B8FF00" stroke-width="3" filter="drop-shadow(0 0 6px #B8FF00)" />
+                    </g>
+                    
+                    <!-- Turf Claimed Polygon (cols 0-2, rows 0-2) -->
+                    <!-- Points at z=0: (0,0), (3,0), (3,3), (0,3) -->
+                    <!-- In local grid coords (relative to originX=0, originY=0): Top (0, 0), Right (180, 90), Bottom (0, 180), Left (-180, 90) -->
+                    <polygon id="turf-polygon" points="0,0 180,90 0,180 -180,90" />
+                    
+                    <!-- Ripples (expand at character position (3,3) -> screen (0, 180) relative to grid origin) -->
+                    <g id="ripple-group" transform="translate(0, 180)">
+                        <polygon class="ripple-diamond ripple-1" points="0,-15 30,0 0,15 -30,0" fill="none" stroke="#B8FF00" stroke-width="1.5" />
+                        <polygon class="ripple-diamond ripple-2" points="0,-15 30,0 0,15 -30,0" fill="none" stroke="#B8FF00" stroke-width="1.5" />
+                        <polygon class="ripple-diamond ripple-3" points="0,-15 30,0 0,15 -30,0" fill="none" stroke="#B8FF00" stroke-width="1.5" />
+                    </g>
+                    
+                    <!-- Ambient character green glow (follows main character) -->
+                    <g id="character-glow-group">
+                        <circle cx="0" cy="0" r="120" fill="url(#character-glow-radial)" />
+                    </g>
+                    
+                    <!-- Hotspot (corner tile (3,4) -> screen (-60, 210) relative to grid origin) -->
+                    <g id="hotspot-group" style="opacity: 0; pointer-events: none;">
+                        <g class="hotspot-pin">
+                            <path d="M 0,-15 C -6,-15 -10,-11 -10,-5 C -10,2 0,10 0,10 C 0,10 10,2 10,-5 C 10,-11 6,-15 0,-15 Z" fill="#B8FF00" stroke="#111" stroke-width="1" />
+                            <circle cx="0" cy="-5" r="3" fill="#111" />
+                        </g>
+                        <g class="coin-floater">
+                            <text class="coin-text coin-1" x="0" y="0" font-family="var(--font-ui)" font-size="12" fill="#B8FF00" text-anchor="middle">●</text>
+                            <text class="coin-text coin-2" x="0" y="0" font-family="var(--font-ui)" font-size="12" fill="#B8FF00" text-anchor="middle">●</text>
+                        </g>
+                        <!-- Floating card near hotspot (screen relative offset) -->
+                        <g class="hotspot-card" transform="translate(-52.5, -55)">
+                            <rect x="0" y="0" width="105" height="26" rx="4" fill="#111" stroke="#B8FF00" stroke-width="1" />
+                            <text x="52" y="9" font-family="var(--font-ui)" font-size="7" fill="#B8FF00" text-anchor="middle" font-weight="bold">HOTSPOT: ACTIVE</text>
+                            <text x="52" y="19" font-family="var(--font-ui)" font-size="6.5" fill="#fff" text-anchor="middle" font-weight="bold">ROYALTIES INCOMING ↑</text>
+                        </g>
+                    </g>
+                    
+                    <!-- Rival Character (anonymous silhouette) -->
+                    <g id="rival-character" class="character-group desaturated" style="display: none; will-change: transform;">
+                        <!-- Ground shadow -->
+                        <ellipse class="character-shadow" cx="0" cy="0" rx="26" ry="8" fill="#B8FF00" opacity="0.15" />
+                        
+                        <g class="character-visual-wrapper" style="will-change: transform;">
+                            <!-- BACKGROUND LAYER -->
+                            <!-- Background leg and shoe -->
+                            <g class="left-leg-group">
+                                <path d="M -6,-46 L -10,-28 L -8,-12" fill="none" stroke="#0F0F11" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M -8.5,-46 L -12.5,-28 L -10.5,-12" fill="none" stroke="#7AAB00" stroke-width="1.2" stroke-linejoin="round" />
+                                <ellipse cx="-8" cy="-12" rx="3.5" ry="1.2" fill="#1C1C1F" />
+                                <path d="M -12,-13 Q -6,-14 -4,-10 L -5,-5 L -17,-6 Q -17,-10 -12,-13 Z" fill="#8A8A93" />
+                                <path d="M -17,-6 L -5,-5 L -6,-3 L -16,-4 Z" fill="#D4D4D8" />
+                                <path d="M -16.5,-5 L -5.5,-4" stroke="#B8FF00" stroke-width="1" />
+                            </g>
+
+                            <!-- Background arm -->
+                            <g class="left-arm-group">
+                                <path d="M -10,-82 L -18,-68" stroke="#111216" stroke-width="6.5" stroke-linecap="round" />
+                                <path d="M -18,-68 L -14,-56" stroke="#111216" stroke-width="5.5" stroke-linecap="round" />
+                                <line x1="-15" y1="-57" x2="-13" y2="-55" stroke="#2E303D" stroke-width="5.5" stroke-linecap="round" />
+                                <circle cx="-13" cy="-53" r="2.2" fill="#C68642" />
+                            </g>
+
+                            <!-- MIDDLE GROUND LAYER -->
+                            <!-- Fitted hoodie torso and logo -->
+                            <g class="body-group">
+                                <path d="M -8,-84 Q 1,-86 8,-82 Q 2,-90 -8,-84" fill="#2B2B35" />
+                                <path d="M -10,-82 Q 0,-80 10,-78 L 10,-46 Q 2,-45 -6,-46 Z" fill="#1B1C22" />
+                                <path d="M -10,-82 Q -2,-80 -1,-46 L -6,-46 Z" fill="#111216" />
+                                <path d="M -4,-48 L 8,-48 Q 10,-56 7,-58 L -3,-58 Q -6,-56 -4,-48 Z" fill="#15161B" />
+                                <line x1="-4" y1="-53" x2="-2" y2="-49" stroke="#2B2D37" stroke-width="1" />
+                                <line x1="8" y1="-53" x2="6" y2="-49" stroke="#2B2D37" stroke-width="1" />
+                                <polygon points="3,-72 5,-69 3,-66 1,-69" fill="#B8FF00" />
+                            </g>
+
+                            <!-- Head, features, tilted cap, AirPod -->
+                            <g class="head-group">
+                                <polygon points="-1,-90 5,-90 5,-85 -1,-85" fill="#C68642" />
+                                <polygon points="-1,-90 2,-90 2,-85 -1,-85" fill="#A76E33" />
+                                <circle cx="2" cy="-101" r="10" fill="#C68642" />
+                                <ellipse cx="2" cy="-104" rx="0.5" ry="1.2" fill="#1C150E" opacity="0.3" />
+                                <ellipse cx="7.5" cy="-104" rx="1.2" ry="1.8" fill="#1C150E" />
+                                <path d="M 5.5,-106.5 Q 7.5,-107.5 9.5,-106.5" stroke="#1C150E" stroke-width="1.2" fill="none" stroke-linecap="round" />
+                                <path d="M 9,-101 L 11,-100 L 9,-99 Z" fill="#A76E33" />
+                                <path d="M 7,-97 L 10,-98" stroke="#4E2F13" stroke-width="1" stroke-linecap="round" />
+                                <circle cx="-4" cy="-99" r="3" fill="#C68642" />
+                                <ellipse cx="-5" cy="-100" rx="1" ry="1.5" fill="#FFFFFF" />
+                                <line x1="-5" y1="-99" x2="-4" y2="-94" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round" />
+                                <path d="M 3,-107 L 16,-114 C 18,-115 19,-113 17,-111 L 5,-103 Z" fill="#B8FF00" />
+                                <path d="M -8,-102 C -10,-114 2,-117 9,-110 C 11,-108 11,-104 9,-102 Z" fill="#1F2026" />
+                            </g>
+
+                            <!-- FOREGROUND LAYER -->
+                            <!-- Foreground leg and shoe -->
+                            <g class="right-leg-group">
+                                <path d="M 5,-46 L 6,-26 L 4,-10" fill="none" stroke="#141416" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M 8.5,-46 L 9.5,-26 L 7.5,-10" fill="none" stroke="#B8FF00" stroke-width="1.5" stroke-linejoin="round" />
+                                <ellipse cx="4" cy="-10" rx="4" ry="1.5" fill="#242428" />
+                                <path d="M 1,-11 Q 6,-12 9,-7 L 11,-1 L -2,-3 Q -2,-7 1,-11 Z" fill="#A1A1AA" />
+                                <path d="M -2,-3 Q 4,-3 9,-1 L 10,-2 L -1,-4 Z" fill="#52525B" opacity="0.3" />
+                                <path d="M -3,-3 Q 5,-2 11,-1 L 10,2 Q 3,1 -4,-1 Z" fill="#E4E4E7" />
+                                <path d="M -2.5,-1.5 Q 4.5,-0.5 10.5,0.5" stroke="#B8FF00" stroke-width="1.2" stroke-linecap="round" />
+                                <polygon points="2,-10 5,-10 6,-6 3,-6" fill="#3F3F46" />
+                            </g>
+
+                            <!-- Foreground raised arm holding phone -->
+                            <g class="right-arm-group">
+                                <circle cx="13" cy="-90" r="16" fill="url(#screen-glow)" opacity="0.35" style="mix-blend-mode: screen;" />
+                                <path d="M 10,-78 Q 22,-64 16,-80" fill="none" stroke="#1B1C22" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+                                <circle cx="15" cy="-82" r="2.8" fill="#C68642" />
+                                <g transform="translate(15, -82) rotate(-15) translate(-4.5, -16)">
+                                    <rect x="0" y="0" width="9" height="15" rx="1.5" fill="#2E2E35" />
+                                    <rect x="1" y="1" width="7" height="13" rx="0.8" fill="#B8FF00" />
+                                    <line x1="3.5" y1="14.2" x2="5.5" y2="14.2" stroke="#2E2E35" stroke-width="0.5" />
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                    
+                    <!-- Open Turf floating tag above the empty block -->
+                    <g id="open-turf-label" transform="translate(0, 45)" style="opacity: 0; transition: opacity 0.4s ease; pointer-events: none;">
+                        <rect x="-35" y="-9" width="70" height="18" rx="3" fill="#111" stroke="#888" stroke-width="1" />
+                        <text x="0" y="2" font-family="var(--font-ui)" font-size="8" fill="#888" text-anchor="middle" font-weight="bold">OPEN TURF</text>
+                    </g>
+                    
+                    <!-- Main Character -->
+                    <g id="main-character" class="character-group idle" style="will-change: transform;">
+                        <!-- Ground shadow -->
+                        <ellipse id="shadow" class="character-shadow" cx="0" cy="0" rx="26" ry="8" fill="#B8FF00" opacity="0.15" />
+                        
+                        <g class="character-visual-wrapper" style="will-change: transform;">
+                            <!-- BACKGROUND LAYER -->
+                            <!-- #leg-left: Background leg and shoe -->
+                            <g id="leg-left" class="left-leg-group">
+                                <!-- Jogger leg -->
+                                <path d="M -6,-46 L -10,-28 L -8,-12" fill="none" stroke="#0F0F11" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <!-- Acid-green side stripe -->
+                                <path d="M -8.5,-46 L -12.5,-28 L -10.5,-12" fill="none" stroke="#7AAB00" stroke-width="1.2" stroke-linejoin="round" />
+                                <!-- Jogger cuff -->
+                                <ellipse cx="-8" cy="-12" rx="3.5" ry="1.2" fill="#1C1C1F" />
+                                <!-- Chunky grey sneaker -->
+                                <path d="M -12,-13 Q -6,-14 -4,-10 L -5,-5 L -17,-6 Q -17,-10 -12,-13 Z" fill="#8A8A93" />
+                                <path d="M -17,-6 L -5,-5 L -6,-3 L -16,-4 Z" fill="#D4D4D8" />
+                                <path d="M -16.5,-5 L -5.5,-4" stroke="#B8FF00" stroke-width="1" />
+                            </g>
+
+                            <!-- #arm-left: Background arm -->
+                            <g id="arm-left" class="left-arm-group">
+                                <!-- Sleeve upper arm -->
+                                <path d="M -10,-82 L -18,-68" stroke="#111216" stroke-width="6.5" stroke-linecap="round" />
+                                <!-- Sleeve lower arm -->
+                                <path d="M -18,-68 L -14,-56" stroke="#111216" stroke-width="5.5" stroke-linecap="round" />
+                                <!-- Sleeve cuff -->
+                                <line x1="-15" y1="-57" x2="-13" y2="-55" stroke="#2E303D" stroke-width="5.5" stroke-linecap="round" />
+                                <!-- Hand -->
+                                <circle cx="-13" cy="-53" r="2.2" fill="#C68642" />
+                            </g>
+
+                            <!-- MIDDLE GROUND LAYER -->
+                            <!-- #body: Fitted hoodie torso and logo -->
+                            <g id="body" class="body-group">
+                                <!-- Hoodie back hood -->
+                                <path d="M -8,-84 Q 1,-86 8,-82 Q 2,-90 -8,-84" fill="#2B2B35" />
+                                <!-- Torso -->
+                                <path d="M -10,-82 Q 0,-80 10,-78 L 10,-46 Q 2,-45 -6,-46 Z" fill="#1B1C22" />
+                                <!-- Left-side shadow styling -->
+                                <path d="M -10,-82 Q -2,-80 -1,-46 L -6,-46 Z" fill="#111216" />
+                                <!-- Kangaroo pocket -->
+                                <path d="M -4,-48 L 8,-48 Q 10,-56 7,-58 L -3,-58 Q -6,-56 -4,-48 Z" fill="#15161B" />
+                                <line x1="-4" y1="-53" x2="-2" y2="-49" stroke="#2B2D37" stroke-width="1" />
+                                <line x1="8" y1="-53" x2="6" y2="-49" stroke="#2B2D37" stroke-width="1" />
+                                <!-- Tiny acid-green (#B8FF00) chest logo -->
+                                <polygon points="3,-72 5,-69 3,-66 1,-69" fill="#B8FF00" />
+                            </g>
+
+                            <!-- #head: Head, features, tilted cap, AirPod -->
+                            <g id="head" class="head-group">
+                                <!-- Neck -->
+                                <polygon points="-1,-90 5,-90 5,-85 -1,-85" fill="#C68642" />
+                                <polygon points="-1,-90 2,-90 2,-85 -1,-85" fill="#A76E33" />
+                                <!-- Head base -->
+                                <circle cx="2" cy="-101" r="10" fill="#C68642" />
+                                <!-- Left eye sliver for depth -->
+                                <ellipse cx="2" cy="-104" rx="0.5" ry="1.2" fill="#1C150E" opacity="0.3" />
+                                <!-- Right eye -->
+                                <ellipse cx="7.5" cy="-104" rx="1.2" ry="1.8" fill="#1C150E" />
+                                <!-- Right eyebrow -->
+                                <path d="M 5.5,-106.5 Q 7.5,-107.5 9.5,-106.5" stroke="#1C150E" stroke-width="1.2" fill="none" stroke-linecap="round" />
+                                <!-- Nose shadow -->
+                                <path d="M 9,-101 L 11,-100 L 9,-99 Z" fill="#A76E33" />
+                                <!-- Mouth -->
+                                <path d="M 7,-97 L 10,-98" stroke="#4E2F13" stroke-width="1" stroke-linecap="round" />
+                                <!-- Right ear -->
+                                <circle cx="-4" cy="-99" r="3" fill="#C68642" />
+                                <!-- AirPod in right ear -->
+                                <ellipse cx="-5" cy="-100" rx="1" ry="1.5" fill="#FFFFFF" />
+                                <line x1="-5" y1="-99" x2="-4" y2="-94" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round" />
+                                <!-- Tilted cap brim & dome -->
+                                <path d="M 3,-107 L 16,-114 C 18,-115 19,-113 17,-111 L 5,-103 Z" fill="#B8FF00" />
+                                <path d="M -8,-102 C -10,-114 2,-117 9,-110 C 11,-108 11,-104 9,-102 Z" fill="#1F2026" />
+                            </g>
+
+                            <!-- FOREGROUND LAYER -->
+                            <!-- #leg-right: Foreground leg and shoe -->
+                            <g id="leg-right" class="right-leg-group">
+                                <!-- Jogger leg -->
+                                <path d="M 5,-46 L 6,-26 L 4,-10" fill="none" stroke="#141416" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <!-- Acid-green side stripe -->
+                                <path d="M 8.5,-46 L 9.5,-26 L 7.5,-10" fill="none" stroke="#B8FF00" stroke-width="1.5" stroke-linejoin="round" />
+                                <!-- Jogger cuff -->
+                                <ellipse cx="4" cy="-10" rx="4" ry="1.5" fill="#242428" />
+                                <!-- Chunky grey sneaker with details -->
+                                <path d="M 1,-11 Q 6,-12 9,-7 L 11,-1 L -2,-3 Q -2,-7 1,-11 Z" fill="#A1A1AA" />
+                                <path d="M -2,-3 Q 4,-3 9,-1 L 10,-2 L -1,-4 Z" fill="#52525B" opacity="0.3" />
+                                <path d="M -3,-3 Q 5,-2 11,-1 L 10,2 Q 3,1 -4,-1 Z" fill="#E4E4E7" />
+                                <!-- Acid-green sole stripe -->
+                                <path d="M -2.5,-1.5 Q 4.5,-0.5 10.5,0.5" stroke="#B8FF00" stroke-width="1.2" stroke-linecap="round" />
+                                <polygon points="2,-10 5,-10 6,-6 3,-6" fill="#3F3F46" />
+                            </g>
+
+                            <!-- #arm-right: Foreground raised arm holding phone -->
+                            <g id="arm-right" class="right-arm-group">
+                                <!-- Glowing green aura from phone screen -->
+                                <circle cx="13" cy="-90" r="16" fill="url(#screen-glow)" opacity="0.35" style="mix-blend-mode: screen;" />
+                                <!-- Arm (hoodie sleeve) -->
+                                <path d="M 10,-78 Q 22,-64 16,-80" fill="none" stroke="#1B1C22" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+                                <!-- Hand -->
+                                <circle cx="15" cy="-82" r="2.8" fill="#C68642" />
+                                <!-- Phone group -->
+                                <g transform="translate(15, -82) rotate(-15) translate(-4.5, -16)">
+                                    <!-- Phone body -->
+                                    <rect x="0" y="0" width="9" height="15" rx="1.5" fill="#2E2E35" />
+                                    <!-- Glowing screen -->
+                                    <rect x="1" y="1" width="7" height="13" rx="0.8" fill="#B8FF00" />
+                                    <!-- Home bar detail -->
+                                    <line x1="3.5" y1="14.2" x2="5.5" y2="14.2" stroke="#2E2E35" stroke-width="0.5" />
+                                </g>
+                            </g>
+                        </g>
+                        <!-- Name Tag -->
+                        <g class="name-tag" style="opacity: 0; transition: opacity 0.4s ease;">
+                            <rect x="-22" y="-136" width="44" height="14" rx="7" fill="#111" stroke="#B8FF00" stroke-width="1" />
+                            <text x="0" y="-126" font-family="var(--font-ui)" font-size="8" fill="#B8FF00" text-anchor="middle" font-weight="bold">@you</text>
+                        </g>
+                </g>
+            </svg>
+
+            <!-- HTML HUD Overlays -->
+            <div class="hud-overlay-wrapper">
+                <!-- Act 1 -->
+                <div class="hud-card" id="hud-act-1">
+                    <div class="hud-label">// SCENE_01</div>
+                    <h2 class="hud-title">THE MAP IS EMPTY.</h2>
+                    <p class="hud-desc">Every block around you — unclaimed. Grey. Dead. Wide open.</p>
                 </div>
                 
-                <!-- Card 2 -->
-                <div class="scrolly-card" data-scene-trigger="2">
-                    <div class="scrolly-card-label">// SCENE_02</div>
-                    <h3 class="scrolly-card-title">DO THE CLAIM WALK.</h3>
-                    <p class="scrolly-card-body">Walk the full perimeter of a block. Every step tightens your grip. The map watches your every move.</p>
+                <!-- Act 2 -->
+                <div class="hud-card" id="hud-act-2" style="text-align: left;">
+                    <div class="hud-label">// SCENE_02</div>
+                    <h2 class="hud-title" style="font-family: var(--font-display); font-size: 64px; margin-bottom: 8px;">DO THE CLAIM WALK.</h2>
+                    <p class="hud-desc" style="font-family: var(--font-ui); font-size: 13px; margin: 0 0 16px 0; max-width: 100%;">Circuit the full block.<br>Close the loop. Lock it down.</p>
+                    <div class="perimeter-progress-container" style="width: 100%;">
+                        <div class="perimeter-progress-bar-bg" style="width: 100%; height: 3px; background: #222; border-radius: 1.5px; overflow: hidden;">
+                            <div id="perimeter-progress-fill" style="width: 0%; height: 100%; background: #B8FF00; transition: width 0.05s linear;"></div>
+                        </div>
+                        <div id="perimeter-progress-label" style="font-family: var(--font-ui); font-size: 10px; color: #888; margin-top: 6px; letter-spacing: 1px;">PERIMETER: 0%</div>
+                    </div>
                 </div>
                 
-                <!-- Card 3 -->
-                <div class="scrolly-card" data-scene-trigger="3">
-                    <div class="scrolly-card-label">// SCENE_03</div>
-                    <h3 class="scrolly-card-title">THIS TURF IS YOURS.</h3>
-                    <p class="scrolly-card-body">Your tag is on the map. That block is marked. Green means held. Keep your Hustle alive or lose it.</p>
+                <!-- Act 3 -->
+                <div class="hud-badge-container" id="hud-act-3">
+                    <div class="hud-badge">✦ TURF CLAIMED</div>
+                    <div class="hud-stats-row">HEAT SCORE: 42 · REP +10 · BP +200</div>
                 </div>
                 
-                <!-- Card 4 -->
-                <div class="scrolly-card" data-scene-trigger="4">
-                    <div class="scrolly-card-label">// SCENE_04</div>
-                    <h3 class="scrolly-card-title">BUILD YOUR CORNER.</h3>
-                    <p class="scrolly-card-body">Spend Block Points to drop a Hotspot anywhere in your Turf. Every new visitor earns you Royalties — passive BP, straight to your stack.</p>
+                <!-- Act 4 -->
+                <div class="hud-card" id="hud-act-4">
+                    <div class="hud-label">// SCENE_04</div>
+                    <h2 class="hud-title">BUILD YOUR CORNER.</h2>
+                    <p class="hud-desc" id="hud-act-4-desc">Spend Block Points. Click a block inside your green perimeter to drop a Hotspot.</p>
                 </div>
                 
-                <!-- Card 5 -->
-                <div class="scrolly-card" data-scene-trigger="5">
-                    <div class="scrolly-card-label">// SCENE_05</div>
-                    <h3 class="scrolly-card-title">RENT DAY.</h3>
-                    <p class="scrolly-card-body">Every month you pay Block Points to Hold your Turf. High Heat Score zones cost more — but pay back harder. Miss it and you Go Ghost.</p>
+                <!-- Act 5 -->
+                <div class="hud-card orange-accent" id="hud-act-5">
+                    <div class="hud-label">// SCENE_05</div>
+                    <h2 class="hud-title">RENT DAY.</h2>
+                    <p class="hud-desc" id="hud-act-5-desc">Pay Block Points to keep your Turf. Miss it and the streets eat you alive.</p>
+                    <div class="hud-badge orange-badge pulsing">RENT DUE · 3 DAYS</div>
                 </div>
                 
-                <!-- Card 6 -->
-                <div class="scrolly-card" data-scene-trigger="6">
-                    <div class="scrolly-card-label">// SCENE_06</div>
-                    <h3 class="scrolly-card-title">HOLD IT OR LOSE IT.</h3>
-                    <p class="scrolly-card-body">Go Ghost and your Turf turns grey — open for anyone to snatch. Keep the Hustle alive. The streets don't wait.</p>
+                <!-- Act 6A -->
+                <div class="hud-card grey-accent" id="hud-act-6a">
+                    <h2 class="hud-title">GO GHOST.</h2>
+                    <p class="hud-desc">Streak broken. Turf open. Someone else is already on their way.</p>
+                </div>
+                
+                <!-- Act 6B -->
+                <div class="hud-card" id="hud-act-6b">
+                    <h2 class="hud-title large-title">HOLD IT.</h2>
+                    <p class="hud-desc">Keep the Hustle alive. Your Turf. Your streets. Your rules.</p>
+                    <div class="hud-badge green-badge">🔥 HUSTLE: 14 DAYS</div>
                 </div>
             </div>
-            
-            <!-- RIGHT: Sticky Character Canvas -->
-            <div class="scrolly-right-canvas" id="scrolly-canvas-wrapper" data-scene="1">
-                <svg class="character-canvas-svg" viewBox="0 0 400 500">
-                    <defs>
-                        <!-- Glow filters -->
-                        <filter id="glow-green-scrolly" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="6" result="blur" />
-                            <feMerge>
-                                <feMergeNode in="blur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                        <filter id="glow-orange-scrolly" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="6" result="blur" />
-                            <feMerge>
-                                <feMergeNode in="blur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                    </defs>
 
-                    <!-- Background street network (outlined blocks) -->
-                    <g class="scene6-blocks-glow">
-                        <g class="scrolly-bg-blocks">
-                            <rect x="50" y="210" width="80" height="70" rx="4" class="scene-block-item" />
-                            <rect x="270" y="230" width="80" height="80" rx="4" class="scene-block-item" />
-                            <rect x="60" y="320" width="90" height="60" rx="4" class="scene-block-item" />
-                            <rect x="250" y="330" width="80" height="60" rx="4" class="scene-block-item" />
-                        </g>
-                    </g>
-
-                    <!-- Standing platform / ground line -->
-                    <line x1="60" y1="410" x2="340" y2="410" stroke="#B8FF00" stroke-width="2" filter="url(#glow-green-scrolly)" class="scene6-blocks-glow" />
-
-                    <!-- SCENE 2: FOOTSTEPS -->
-                    <g class="scene-2-steps">
-                        <circle cx="120" cy="380" r="4.5" class="footstep-dot step-dot-1" />
-                        <circle cx="145" cy="390" r="4.5" class="footstep-dot step-dot-2" />
-                        <circle cx="170" cy="382" r="4.5" class="footstep-dot step-dot-3" />
-                    </g>
-
-                    <!-- SCENE 3: VICTORY BURST -->
-                    <g class="scene-3-burst">
-                        <line x1="255" y1="110" x2="230" y2="85" class="burst-line" />
-                        <line x1="255" y1="110" x2="280" y2="85" class="burst-line" />
-                        <line x1="255" y1="110" x2="215" y2="120" class="burst-line" />
-                        <line x1="255" y1="110" x2="295" y2="120" class="burst-line" />
-                        <line x1="255" y1="110" x2="235" y2="140" class="burst-line" />
-                        <line x1="255" y1="110" x2="275" y2="140" class="burst-line" />
-                    </g>
-
-                    <!-- SCENE 4: FLOATING COINS -->
-                    <g class="scene-4-coins">
-                        <text x="210" y="160" class="coin-icon coin-1" font-size="16" fill="var(--accent-green)">●</text>
-                        <text x="270" y="150" class="coin-icon coin-2" font-size="16" fill="var(--accent-green)">●</text>
-                        <text x="240" y="175" class="coin-icon coin-3" font-size="16" fill="var(--accent-green)">●</text>
-                    </g>
-
-                    <!-- CHARACTER MASTER WRAPPER -->
-                    <g class="char-wrapper">
-                        <!-- Legs set 1 (Standing Pose) -->
-                        <g class="char-standing-legs">
-                            <!-- Left Leg -->
-                            <path d="M175,280 L175,395 L165,395 L165,406 L187,406 L187,395 L180,395 L180,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                            <!-- Right Leg -->
-                            <path d="M220,280 L220,395 L210,395 L210,406 L232,406 L232,395 L225,395 L225,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                            <!-- Sneaker Soles -->
-                            <rect x="165" y="402" width="22" height="4" fill="var(--accent-green)" />
-                            <rect x="210" y="402" width="22" height="4" fill="var(--accent-green)" />
-                        </g>
-
-                        <!-- Legs set 2 (Walking/Stride Pose) -->
-                        <g class="char-walking-legs">
-                            <!-- Left Leg (stepping back) -->
-                            <path d="M175,280 L150,375 L138,375 L135,386 L158,386 L158,375 L180,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                            <!-- Right Leg (stepping forward/lifted) -->
-                            <path d="M220,280 L238,360 L255,385 L268,385 L264,396 L242,396 L232,370 L210,280 Z" fill="#141414" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                            <!-- Sneaker Soles -->
-                            <rect x="135" y="382" width="23" height="4" fill="var(--accent-green)" transform="rotate(-12 135 382)" />
-                            <rect x="242" y="392" width="22" height="4" fill="var(--accent-green)" transform="rotate(12 242 392)" />
-                        </g>
-
-                        <!-- Upper Body: Torso & Head -->
-                        <g class="char-upper-body">
-                            <!-- Torso (Streetwear Jacket) -->
-                            <path d="M165,160 L235,160 L242,280 L158,280 Z" fill="#181818" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
-                            <!-- Jacket Zipper Detail -->
-                            <line x1="200" y1="160" x2="200" y2="280" stroke="var(--accent-green)" stroke-width="2" opacity="0.8" />
-
-                            <!-- Head Group -->
-                            <g class="char-head">
-                                <!-- Head Capsule -->
-                                <rect x="185" y="110" width="30" height="36" rx="10" fill="#121212" stroke="var(--accent-green)" stroke-width="1.5" />
-                                <!-- Futuristic goggles -->
-                                <rect x="189" y="120" width="22" height="7" rx="1.5" fill="var(--accent-green)" />
-                                <!-- Cap -->
-                                <path d="M182,118 Q200,98 218,118 L228,119 L213,123 Z" fill="#111" stroke="var(--accent-green)" stroke-width="0.5" />
-                            </g>
-
-                            <!-- ARMS & PHONES -->
-                            
-                            <!-- ARM 1: Standard (scenes 1, 2, 4) -->
-                            <g class="arm-standard">
-                                <path d="M 230,175 L 260,205 L 250,195" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
-                                <!-- Phone container -->
-                                <g transform="translate(250, 185) rotate(-10)">
-                                    <!-- Phone body -->
-                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-green)" stroke-width="1" />
-                                    <!-- Screen -->
-                                    <rect x="-7" y="-13" width="14" height="26" fill="#000" />
-                                    <!-- Screen Contents: Scene 1 -->
-                                    <g class="phone-map-scene1">
-                                        <line x1="-5" y1="0" x2="5" y2="0" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
-                                        <line x1="0" y1="-7" x2="0" y2="7" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
-                                        <rect x="-2" y="-2" width="4" height="4" fill="#fff" class="map-cursor" />
-                                    </g>
-                                    <!-- Screen Contents: Scene 2 -->
-                                    <g class="phone-map-scene2">
-                                        <!-- drawing green polygon -->
-                                        <rect x="-5" y="-9" width="10" height="18" fill="none" stroke="var(--accent-green)" stroke-dasharray="60" stroke-dashoffset="60" stroke-width="1" class="phone-dash-polygon" />
-                                    </g>
-                                    <!-- Screen Contents: Scene 4 -->
-                                    <g class="phone-map-scene4">
-                                        <rect x="-5" y="-9" width="10" height="18" fill="rgba(184,255,0,0.3)" stroke="var(--accent-green)" stroke-width="0.5" />
-                                        <circle cx="0" cy="0" r="2.5" fill="var(--accent-green)" class="phone-pulse-pin" />
-                                    </g>
-                                </g>
-                            </g>
-
-                            <!-- ARM 2: Victory (scene 3) -->
-                            <g class="arm-victory">
-                                <path d="M 230,175 L 245,140 L 255,110" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
-                                <!-- Phone container -->
-                                <g transform="translate(255, 110) rotate(15)">
-                                    <!-- Phone body -->
-                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-green)" stroke-width="1" />
-                                    <!-- Screen -->
-                                    <rect x="-7" y="-13" width="14" height="26" fill="#000" />
-                                    <!-- Screen contents: Solid green polygon with white pin -->
-                                    <rect x="-5" y="-9" width="10" height="18" fill="var(--accent-green)" />
-                                    <circle cx="0" cy="0" r="2.5" fill="#fff" />
-                                </g>
-                            </g>
-
-                            <!-- ARM 3: Slouch (scene 5) -->
-                            <g class="arm-slouch">
-                                <path d="M 230,175 L 242,210 L 220,215" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
-                                <!-- Phone container -->
-                                <g transform="translate(220, 215) rotate(-30)">
-                                    <!-- Phone body -->
-                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-orange)" stroke-width="1" />
-                                    <!-- Screen -->
-                                    <rect x="-7" y="-13" width="14" height="26" fill="#1a0700" />
-                                    <!-- Calendar timer screen details -->
-                                    <rect x="-4" y="-7" width="8" height="6" fill="none" stroke="var(--accent-orange)" stroke-width="0.5" />
-                                    <circle cx="0" cy="4" r="3" fill="none" stroke="var(--accent-orange)" stroke-width="0.5" />
-                                </g>
-                            </g>
-
-                            <!-- ARM 4: Confident (scene 6) -->
-                            <g class="arm-confident">
-                                <path d="M 230,175 L 252,168 L 262,142" fill="none" stroke="#181818" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
-                                <!-- Phone container -->
-                                <g transform="translate(262, 142) rotate(5)">
-                                    <!-- Phone body -->
-                                    <rect x="-8" y="-14" width="16" height="28" rx="2" fill="#1e1e1e" stroke="var(--accent-green)" stroke-width="1" class="scene6-phone-body" />
-                                    <!-- Screen -->
-                                    <rect x="-7" y="-13" width="14" height="26" fill="#000" class="scene6-phone-screen" />
-                                    <!-- Streak/Flame screen details -->
-                                    <rect x="-5" y="-9" width="10" height="18" fill="rgba(184,255,0,0.2)" stroke="var(--accent-green)" stroke-width="0.5" class="scene6-phone-map" />
-                                    <circle cx="0" cy="0" r="2.5" fill="var(--accent-green)" class="scene6-phone-flame" />
-                                </g>
-                            </g>
-
-                        </g> <!-- Upper Body end -->
-                    </g> <!-- Character Master end -->
-
-                    <!-- SCENE-SPECIFIC OVERLAYS OUTSIDE CHARACTER -->
-
-                    <!-- SCENE 3: FLOATING BADGE -->
-                    <g class="scene-3-badge" transform="translate(0, 0)">
-                        <rect x="135" y="55" width="130" height="22" rx="11" fill="#111" stroke="var(--accent-green)" stroke-width="1.5" filter="url(#glow-green-scrolly)" />
-                        <text x="200" y="69" font-family="var(--font-ui)" font-size="9" fill="var(--accent-green)" text-anchor="middle" font-weight="bold">TURF CLAIMED</text>
-                    </g>
-
-                    <!-- SCENE 4: FLOATING CARD -->
-                    <g class="scene-4-card" transform="translate(0, 0)">
-                        <rect x="90" y="45" width="220" height="38" rx="4" fill="#111" stroke="var(--accent-green)" stroke-width="1.5" filter="url(#glow-green-scrolly)" />
-                        <text x="200" y="68" font-family="var(--font-ui)" font-size="9" fill="var(--white)" text-anchor="middle" font-weight="bold">HOTSPOT ACTIVE · ROYALTIES: ON</text>
-                    </g>
-
-                    <!-- SCENE 5: FLOATING RENT DAY WARNING -->
-                    <g class="scene-5-warning">
-                        <rect x="105" y="55" width="190" height="24" rx="12" fill="#111" stroke="var(--accent-orange)" stroke-width="1.5" filter="url(#glow-orange-scrolly)" />
-                        <text x="200" y="70" font-family="var(--font-ui)" font-size="9" fill="var(--accent-orange)" text-anchor="middle" font-weight="bold">RENT DAY · 3 DAYS LEFT</text>
-                    </g>
-
-                    <!-- SCENE 6 SUBSTATE B: GONE GHOST BADGE -->
-                    <g class="scene6-substate-b">
-                        <rect x="145" y="55" width="110" height="22" rx="11" fill="#111" stroke="#808080" stroke-width="1.5" />
-                        <text x="200" y="69" font-family="var(--font-ui)" font-size="9" fill="#808080" text-anchor="middle" font-weight="bold">GONE GHOST</text>
-                    </g>
-
-                </svg>
+            <!-- Full width centered Bridge Text -->
+            <div class="scrolly-bridge-container-overlay" id="hud-bridge-overlay">
+                <h2>YOUR STREETS ARE WAITING.</h2>
             </div>
+            
+            <!-- Background scanline texture for Act 1 -->
+            <div class="act-1-scanline" id="act-1-scanline-sweep"></div>
+            
+            <!-- Orange wash overlay for Act 5 -->
+            <div class="scene-orange-overlay" id="scene-orange-overlay-tint"></div>
         </div>
     </section>
-
-    <!-- BRIDGE TO "HOW IT WORKS" -->
-    <div class="scrolly-bridge-wrapper reveal">
-        <h2 class="scrolly-bridge-text">YOUR STREETS ARE WAITING.</h2>
-    </div>
 
     <!-- SECTION 02 — HOW IT WORKS -->
     <section class="section-wrapper" id="how-it-works">
@@ -2465,7 +2847,7 @@
     <script>
         // --- 1. STAGING SOUND SYNTHESISER ---
         let audioCtx = null;
-        let isAudioOn = false;
+        let isAudioOn = true;
         
         function initAudio() {
             if (!audioCtx) {
@@ -2475,6 +2857,19 @@
                 audioCtx.resume();
             }
         }
+
+        // Auto-resume AudioContext on first user interaction if audio is enabled
+        const resumeAudioOnInteraction = () => {
+            if (isAudioOn) {
+                initAudio();
+            }
+            document.removeEventListener('click', resumeAudioOnInteraction);
+            document.removeEventListener('scroll', resumeAudioOnInteraction);
+            document.removeEventListener('keydown', resumeAudioOnInteraction);
+        };
+        document.addEventListener('click', resumeAudioOnInteraction);
+        document.addEventListener('scroll', resumeAudioOnInteraction);
+        document.addEventListener('keydown', resumeAudioOnInteraction);
         
         const audioBtn = document.getElementById('audio-toggle');
         audioBtn.addEventListener('click', () => {
@@ -2534,6 +2929,22 @@
             gain2.connect(audioCtx.destination);
             osc2.start(now + 0.08);
             osc2.stop(now + 0.22);
+        }
+
+        function playSynthError() {
+            if (!isAudioOn || !audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.18);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.18);
         }
 
         // Attach audio hovers to key interactive elements
@@ -2821,35 +3232,776 @@
             }
         });
 
-        // --- 8. SCROLLYTELLING INTERSECTION OBSERVER ---
-        const scrollyCanvas = document.getElementById('scrolly-canvas-wrapper');
-        const scrollyCards = document.querySelectorAll('.scrolly-card');
+        // --- 8. ISOMETRIC WORLD SCROLLYTELLING ENGINE ---
         
-        const scrollyObserverOptions = {
-            root: null,
-            rootMargin: '-20% 0px -20% 0px',
-            threshold: 0.5
-        };
+        // Waypoint configs
+        const waypoints = [
+            { progress: 0.0, col: 3, row: 3, state: 'idle' },
+            { progress: 0.12, col: 3, row: 3, state: 'idle' },
+            { progress: 0.28, col: 3, row: 3, state: 'walking' },
+            { progress: 0.32, col: 3, row: 3, state: 'celebrating' },
+            { progress: 0.40, col: 3, row: 3, state: 'idle' },
+            { progress: 0.48, col: 3, row: 4, state: 'walking' },
+            { progress: 0.55, col: 3, row: 4, state: 'tapping' },
+            { progress: 0.62, col: 3, row: 3, state: 'walking' },
+            { progress: 0.70, col: 3, row: 3, state: 'slouch' },
+            { progress: 0.85, col: 3, row: 3, state: 'idle' },
+            { progress: 0.92, col: 3, row: 3, state: 'celebrating' },
+            { progress: 1.0, col: 3, row: 3, state: 'celebrating' }
+        ];
+
+        // Street layout configs
+        function isStreet(col, row) {
+            return col === 3 || col === 4 || row === 3 || row === 4;
+        }
+
+        // Deterministic building heights (tall on edges, shorter near street)
+        function getBuildingHeightUnits(col, row) {
+            if (isStreet(col, row)) return 0;
+            const isEdge = col === 0 || col === 7 || row === 0 || row === 7;
+            if (isEdge) {
+                return ((col * 3 + row * 7) % 2) + 3; // 3 or 4
+            } else {
+                return ((col * 2 + row * 5) % 2) + 1; // 1 or 2
+            }
+        }
+
+        // Isometric coordinates mapping
+        const tileW = 120;
+        const tileH = 60;
+        function gridToScreen(col, row) {
+            const x = (col - row) * tileW / 2;
+            const y = (col + row) * tileH / 2;
+            return { x, y };
+        }
+
+        function getPosAtT(t_val) {
+            let col = 3;
+            let row = 3;
+            if (t_val < 0.25) {
+                const s = t_val / 0.25;
+                col = 3;
+                row = 3 - s * 3;
+            } else if (t_val < 0.50) {
+                const s = (t_val - 0.25) / 0.25;
+                col = 3 - s * 3;
+                row = 0;
+            } else if (t_val < 0.75) {
+                const s = (t_val - 0.50) / 0.25;
+                col = 0;
+                row = s * 3;
+            } else {
+                const s = Math.min(1.0, (t_val - 0.75) / 0.20);
+                col = s * 3;
+                row = 3;
+            }
+            return gridToScreen(col, row);
+        }
+
+        // HTML & SVG Elements
+        const mainGridGroup = document.getElementById('main-grid-group');
+        const bgParallaxGroup = document.getElementById('bg-parallax-group');
+        const scrollyContainer = document.getElementById('scrolly-narrative');
+        const stickyContainer = document.getElementById('scrolly-sticky-container');
+        const svgElement = document.getElementById('isometric-svg');
+        const cameraGroup = document.getElementById('camera-group');
+        const mainChar = document.getElementById('main-character');
+        const rivalChar = document.getElementById('rival-character');
+        const turfPolygon = document.getElementById('turf-polygon');
+        const openTurfLabel = document.getElementById('open-turf-label');
+        const rippleGroup = document.getElementById('ripple-group');
+        const hotspotGroup = document.getElementById('hotspot-group');
         
-        const scrollyObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const sceneNum = entry.target.getAttribute('data-scene-trigger');
-                    scrollyCanvas.setAttribute('data-scene', sceneNum);
+        let hotspotCol = 1;
+        let hotspotRow = 1;
+        let hotspotPlaced = true;
+        let isShowingError = false;
+
+        function positionHotspot(col, row) {
+            const screen = gridToScreen(col, row);
+            const hUnits = getBuildingHeightUnits(col, row);
+            const h = hUnits * 20;
+            const targetX = screen.x;
+            const targetY = screen.y + tileH / 2 - h - 10;
+            hotspotGroup.setAttribute('transform', `translate(${targetX}, ${targetY})`);
+        }
+
+        function handleBlockClick(col, row) {
+            const rect = scrollyContainer.getBoundingClientRect();
+            const sectionTop = rect.top + window.scrollY;
+            const sectionHeight = rect.height;
+            const viewportHeight = window.innerHeight;
+            const scrollTop = window.scrollY;
+            let scrollProgress = (scrollTop - sectionTop) / (sectionHeight - viewportHeight);
+            scrollProgress = Math.max(0, Math.min(1, scrollProgress));
+
+            if (scrollProgress < 0.40 || scrollProgress >= 0.70) {
+                return;
+            }
+
+            const isInsideClaimedPerimeter = (col >= 0 && col <= 2) && (row >= 0 && row <= 2);
+
+            if (isInsideClaimedPerimeter) {
+                hotspotCol = col;
+                hotspotRow = row;
+                hotspotPlaced = true;
+                isShowingError = false;
+                if (window.errorRevertTimeout) {
+                    clearTimeout(window.errorRevertTimeout);
+                    window.errorRevertTimeout = null;
+                }
+                
+                positionHotspot(col, row);
+                playSynthSuccess();
+                updateScroll();
+            } else {
+                playSynthError();
+                isShowingError = true;
+                
+                if (scrollProgress >= 0.40 && scrollProgress < 0.55) {
+                    const hud4Desc = document.getElementById('hud-act-4-desc');
+                    if (hud4Desc) {
+                        hud4Desc.innerHTML = `<span style="color: #ff3333; font-weight: bold;">✗ ACCESS DENIED:</span> Corner (${col},${row}) is outside claimed perimeter! Click inside.`;
+                    }
+                } else if (scrollProgress >= 0.55 && scrollProgress < 0.70) {
+                    const hud5Desc = document.getElementById('hud-act-5-desc');
+                    if (hud5Desc) {
+                        hud5Desc.innerHTML = `<span style="color: #ff3333; font-weight: bold;">✗ ACCESS DENIED:</span> Corner (${col},${row}) is outside claimed perimeter! Click inside.`;
+                    }
+                }
+                
+                if (window.errorRevertTimeout) clearTimeout(window.errorRevertTimeout);
+                window.errorRevertTimeout = setTimeout(() => {
+                    isShowingError = false;
+                    updateScroll();
+                }, 3000);
+            }
+        }
+        
+        let originX = 500;
+        let originY = 320;
+        let baseScale = 1.0;
+
+        const trailGroup = document.getElementById('claim-walk-trail');
+        function initTrail() {
+            if (!trailGroup) return;
+            trailGroup.innerHTML = '';
+            for (let i = 0; i < 40; i++) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('display', 'none');
+                trailGroup.appendChild(line);
+            }
+        }
+
+        // Dynamic Grid Generation
+        function initGrid() {
+            initTrail();
+            mainGridGroup.innerHTML = '';
+            bgParallaxGroup.innerHTML = '';
+            
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const isSt = isStreet(c, r);
+                    const screen = gridToScreen(c, r);
                     
-                    // Highlight card
-                    scrollyCards.forEach(card => card.classList.remove('active-scrolly-card'));
-                    entry.target.classList.add('active-scrolly-card');
-                    
-                    // Trigger sound
-                    playSynthClick();
+                    if (isSt) {
+                        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        poly.classList.add('street-tile');
+                        poly.setAttribute('data-col', c);
+                        poly.setAttribute('data-row', r);
+                        poly.setAttribute('id', `tile-${c}-${r}`);
+                        
+                        const pTop = `${screen.x},${screen.y}`;
+                        const pRight = `${screen.x + tileW / 2},${screen.y + tileH / 2}`;
+                        const pBottom = `${screen.x},${screen.y + tileH}`;
+                        const pLeft = `${screen.x - tileW / 2},${screen.y + tileH / 2}`;
+                        poly.setAttribute('points', `${pTop} ${pRight} ${pBottom} ${pLeft}`);
+                        
+                        mainGridGroup.appendChild(poly);
+                    } else {
+                        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        g.classList.add('block-tile');
+                        g.setAttribute('data-col', c);
+                        g.setAttribute('data-row', r);
+                        
+                        const isCentral = (c >= 0 && c <= 2) && (r >= 0 && r <= 2);
+                        if (isCentral) {
+                            g.classList.add('central-block');
+                        }
+                        
+                        const hUnits = getBuildingHeightUnits(c, r);
+                        const h = hUnits * 20;
+                        
+                        const pTop = { x: screen.x, y: screen.y };
+                        const pRight = { x: screen.x + tileW / 2, y: screen.y + tileH / 2 };
+                        const pBottom = { x: screen.x, y: screen.y + tileH };
+                        const pLeft = { x: screen.x - tileW / 2, y: screen.y + tileH / 2 };
+                        
+                        const rTop = { x: pTop.x, y: pTop.y - h };
+                        const rRight = { x: pRight.x, y: pRight.y - h };
+                        const rBottom = { x: pBottom.x, y: pBottom.y - h };
+                        const rLeft = { x: pLeft.x, y: pLeft.y - h };
+                        
+                        const leftWall = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        leftWall.classList.add('left-wall');
+                        leftWall.setAttribute('points', `${pLeft.x},${pLeft.y} ${pBottom.x},${pBottom.y} ${rBottom.x},${rBottom.y} ${rLeft.x},${rLeft.y}`);
+                        g.appendChild(leftWall);
+                        
+                        const rightWall = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        rightWall.classList.add('right-wall');
+                        rightWall.setAttribute('points', `${pBottom.x},${pBottom.y} ${pRight.x},${pRight.y} ${rRight.x},${rRight.y} ${rBottom.x},${rBottom.y}`);
+                        g.appendChild(rightWall);
+                        
+                        const roof = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        roof.classList.add('roof');
+                        roof.setAttribute('points', `${rTop.x},${rTop.y} ${rRight.x},${rRight.y} ${rBottom.x},${rBottom.y} ${rLeft.x},${rLeft.y}`);
+                        g.appendChild(roof);
+                        
+                        g.addEventListener('click', () => {
+                            handleBlockClick(c, r);
+                        });
+                        
+                        // Parallax separation
+                        if (c + r <= 3) {
+                            bgParallaxGroup.appendChild(g);
+                        } else {
+                            mainGridGroup.appendChild(g);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Depth sort character in grid list
+        function depthSortCharacter(charEl, col, row) {
+            const charIndex = Math.floor(row) * 8 + Math.floor(col);
+            const children = mainGridGroup.children;
+            let inserted = false;
+            
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i];
+                const cCol = parseInt(child.getAttribute('data-col'));
+                const cRow = parseInt(child.getAttribute('data-row'));
+                const childIndex = cRow * 8 + cCol;
+                
+                if (childIndex > charIndex) {
+                    mainGridGroup.insertBefore(charEl, child);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                mainGridGroup.appendChild(charEl);
+            }
+        }
+
+        // Interpolators
+        function getCharacterPosition(progress) {
+            if (progress >= 0.12 && progress <= 0.28) {
+                const t = (progress - 0.12) / 0.16;
+                let col = 3;
+                let row = 3;
+                let state = 'walking';
+                let flipped = false;
+
+                if (t < 0.25) {
+                    const s = t / 0.25;
+                    col = 3;
+                    row = 3 - s * 3;
+                    flipped = false;
+                } else if (t < 0.50) {
+                    const s = (t - 0.25) / 0.25;
+                    col = 3 - s * 3;
+                    row = 0;
+                    flipped = true;
+                } else if (t < 0.75) {
+                    const s = (t - 0.50) / 0.25;
+                    col = 0;
+                    row = s * 3;
+                    flipped = true;
+                } else if (t < 0.95) {
+                    const s = (t - 0.75) / 0.20;
+                    col = s * 3;
+                    row = 3;
+                    flipped = false;
+                } else {
+                    col = 3;
+                    row = 3;
+                    state = 'celebrating';
+                    flipped = false;
+                }
+                return { col, row, state, flipped };
+            }
+
+            let w0 = waypoints[0];
+            let w1 = waypoints[waypoints.length - 1];
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                if (progress >= waypoints[i].progress && progress <= waypoints[i+1].progress) {
+                    w0 = waypoints[i];
+                    w1 = waypoints[i+1];
+                    break;
+                }
+            }
+            
+            const diff = w1.progress - w0.progress;
+            const t = diff > 0 ? (progress - w0.progress) / diff : 0;
+            const col = w0.col + t * (w1.col - w0.col);
+            const row = w0.row + t * (w1.row - w0.row);
+            
+            let state = w0.state;
+            if (Math.abs(w0.col - w1.col) > 0.01 || Math.abs(w0.row - w1.row) > 0.01) {
+                state = 'walking';
+            }
+            if (progress >= 0.70 && progress < 0.85) {
+                state = 'idle';
+            }
+            
+            // Determine flip based on movement direction
+            let flipped = false;
+            if (w1.col < w0.col || w1.row > w0.row) {
+                flipped = true; // left-facing direction
+            }
+            
+            return { col, row, state, flipped };
+        }
+
+        function getRivalPosition(progress) {
+            if (progress < 0.70 || progress > 0.95) return null;
+            if (progress <= 0.85) {
+                const t = (progress - 0.70) / (0.85 - 0.70);
+                return { col: 4, row: 7 + t * (4 - 7), state: 'walking', flipped: true };
+            } else {
+                const t = (progress - 0.85) / (0.95 - 0.85);
+                return { col: 4, row: 4 + t * (7 - 4), state: 'walking', flipped: false };
+            }
+        }
+
+        function getCameraZoom(progress) {
+            if (progress < 0.12) return 1.1;
+            if (progress < 0.28) {
+                const t = (progress - 0.12) / 0.16;
+                if (t <= 0.1) {
+                    return 1.1 - (t / 0.1) * (1.1 - 0.935);
+                } else {
+                    return 0.935;
+                }
+            }
+            if (progress < 0.32) {
+                const t_zoom = (progress - 0.28) / 0.04;
+                return 0.935 + t_zoom * (1.2 - 0.935);
+            }
+            if (progress < 0.40) return 1.2;
+            if (progress < 0.55) return 1.2;
+            if (progress < 0.60) {
+                const t = (progress - 0.55) / 0.05;
+                return 1.2 - t * 0.06;
+            }
+            if (progress < 0.70) return 1.14;
+            if (progress < 0.75) {
+                const t = (progress - 0.70) / 0.05;
+                return 1.14 - t * 0.39;
+            }
+            if (progress < 0.85) return 0.75;
+            if (progress < 0.90) {
+                const t = (progress - 0.85) / 0.05;
+                return 0.75 + t * 0.45;
+            }
+            return 1.2;
+        }
+
+        // Resize layout handler
+        function handleResize() {
+            originX = 500;
+            originY = 350;
+            baseScale = 1.0;
+            updateScroll();
+        }
+
+        // Active HUD management
+        const hudCards = [
+            { id: 'hud-act-1', min: 0.0, max: 0.12 },
+            { id: 'hud-act-2', min: 0.12, max: 0.272 },
+            { id: 'hud-act-3', min: 0.272, max: 0.40 },
+            { id: 'hud-act-4', min: 0.40, max: 0.55 },
+            { id: 'hud-act-5', min: 0.55, max: 0.70 },
+            { id: 'hud-act-6a', min: 0.70, max: 0.85 },
+            { id: 'hud-act-6b', min: 0.85, max: 1.0 }
+        ];
+
+        let currentActIndex = -1;
+        let rippleActive3 = false;
+        let rippleActive6b = false;
+        let chimeTriggered = false;
+
+        function playClaimChime() {
+            if (!isAudioOn || !audioCtx) return;
+            const now = audioCtx.currentTime;
+            
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(220, now);
+            gain1.gain.setValueAtTime(0.15, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.08);
+            
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(440, now + 0.08);
+            gain2.gain.setValueAtTime(0.15, now + 0.08);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(now + 0.08);
+            osc2.stop(now + 0.16);
+        }
+
+        function updateScroll() {
+            const rect = scrollyContainer.getBoundingClientRect();
+            const sectionTop = rect.top + window.scrollY;
+            const sectionHeight = rect.height;
+            const viewportHeight = window.innerHeight;
+            const scrollTop = window.scrollY;
+            
+            let scrollProgress = (scrollTop - sectionTop) / (sectionHeight - viewportHeight);
+            scrollProgress = Math.max(0, Math.min(1, scrollProgress));
+
+            // Sound feedback on Act transitions
+            let actIndex = -1;
+            hudCards.forEach((c, idx) => {
+                if (scrollProgress >= c.min && scrollProgress < c.max) {
+                    actIndex = idx;
                 }
             });
-        }, scrollyObserverOptions);
+            if (scrollProgress >= 0.95) actIndex = 7;
+            
+            if (actIndex !== currentActIndex) {
+                currentActIndex = actIndex;
+                if (currentActIndex >= 0) playSynthClick();
+            }
+
+            // HUD visibility & fade outs
+            const bridgeOverlay = document.getElementById('hud-bridge-overlay');
+            if (scrollProgress >= 0.95) {
+                svgElement.style.opacity = Math.max(0, 1 - (scrollProgress - 0.95) / 0.04);
+                bridgeOverlay.classList.add('active');
+                hudCards.forEach(c => document.getElementById(c.id).classList.remove('active'));
+            } else {
+                svgElement.style.opacity = 1;
+                bridgeOverlay.classList.remove('active');
+                hudCards.forEach(c => {
+                    const el = document.getElementById(c.id);
+                    if (scrollProgress >= c.min && scrollProgress < c.max) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+            }
+
+            // Set state class on sticky wrapper
+            stickyContainer.className = 'scrolly-sticky-container';
+            if (scrollProgress >= 0.02 && scrollProgress < 0.12) {
+                stickyContainer.classList.add('state-act1');
+            } else if (scrollProgress >= 0.12 && scrollProgress < 0.28) {
+                stickyContainer.classList.add('state-act2');
+            } else if (scrollProgress >= 0.28 && scrollProgress < 0.40) {
+                stickyContainer.classList.add('state-act3');
+            } else if (scrollProgress >= 0.40 && scrollProgress < 0.55) {
+                stickyContainer.classList.add('state-act4');
+            } else if (scrollProgress >= 0.55 && scrollProgress < 0.70) {
+                stickyContainer.classList.add('state-act5');
+            } else if (scrollProgress >= 0.70 && scrollProgress < 0.85) {
+                stickyContainer.classList.add('state-act6a');
+            } else if (scrollProgress >= 0.85) {
+                stickyContainer.classList.add('state-act6b');
+            }
+
+            // Main character position & state
+            const charPos = getCharacterPosition(scrollProgress);
+            const charScreen = gridToScreen(charPos.col, charPos.row);
+            mainChar.setAttribute('transform', `translate(${charScreen.x}, ${charScreen.y})`);
+            mainChar.className = 'character-group ' + charPos.state + (charPos.flipped ? ' flipped' : '');
+
+            // Sort main character depth dynamically
+            depthSortCharacter(mainChar, charPos.col, charPos.row);
+
+            // Ambient Character green glow overlay
+            const glowGroup = document.getElementById('character-glow-group');
+            if (glowGroup) {
+                glowGroup.setAttribute('transform', `translate(${charScreen.x}, ${charScreen.y})`);
+            }
+
+            // Rival character updates
+            const rivalPos = getRivalPosition(scrollProgress);
+            if (rivalPos) {
+                const rivalScreen = gridToScreen(rivalPos.col, rivalPos.row);
+                rivalChar.setAttribute('transform', `translate(${rivalScreen.x}, ${rivalScreen.y})`);
+                rivalChar.className = 'character-group desaturated ' + rivalPos.state + (rivalPos.flipped ? ' flipped' : '');
+                rivalChar.style.display = 'block';
+                
+                // Depth sort rival character as well
+                depthSortCharacter(rivalChar, rivalPos.col, rivalPos.row);
+            } else {
+                rivalChar.style.display = 'none';
+            }
+
+            // Camera panning & zoom math
+            let focusX = charScreen.x;
+            let focusY = charScreen.y;
+            
+            if (scrollProgress >= 0.12 && scrollProgress < 0.28) {
+                const t = (scrollProgress - 0.12) / 0.16;
+                if (t <= 0.1) {
+                    const s = t / 0.1;
+                    focusX = charScreen.x * (1 - s) + 0 * s;
+                    focusY = charScreen.y * (1 - s) + 90 * s;
+                } else {
+                    focusX = 0;
+                    focusY = 90;
+                }
+            } else if (scrollProgress >= 0.28 && scrollProgress < 0.32) {
+                const t_focus = (scrollProgress - 0.28) / 0.04;
+                focusX = charScreen.x * t_focus + 0 * (1 - t_focus);
+                focusY = charScreen.y * t_focus + 90 * (1 - t_focus);
+            } else if (scrollProgress >= 0.70 && scrollProgress < 0.85) {
+                const gridCenter = gridToScreen(3.5, 3.5);
+                let t_focus = 1.0;
+                if (scrollProgress < 0.75) {
+                    t_focus = (scrollProgress - 0.70) / 0.05; // smooth blend in
+                } else if (scrollProgress > 0.80) {
+                    t_focus = 1.0 - (scrollProgress - 0.80) / 0.05; // smooth blend out
+                }
+                focusX = charScreen.x + t_focus * (gridCenter.x - charScreen.x);
+                focusY = charScreen.y + t_focus * (gridCenter.y - charScreen.y);
+            }
+
+            const scale = getCameraZoom(scrollProgress) * baseScale;
+            
+            // Set camera coordinates (with will-change: transform optimisations)
+            const camX = originX - focusX * scale;
+            const camY = originY - focusY * scale;
+            cameraGroup.style.transform = `translate(${camX}px, ${camY}px) scale(${scale})`;
+
+            // Parallax shift background elements at 0.3x
+            const parallaxX = focusX * 0.7;
+            const parallaxY = focusY * 0.7;
+            bgParallaxGroup.setAttribute('transform', `translate(${parallaxX}, ${parallaxY})`);
+
+            // 1. Street trail coloring
+            const streetTiles = document.querySelectorAll('.street-tile');
+            streetTiles.forEach(tile => {
+                const col = parseInt(tile.getAttribute('data-col'));
+                const row = parseInt(tile.getAttribute('data-row'));
+                let visited = false;
+                
+                if (scrollProgress >= 0.12) {
+                    // In Scene 02, t is the circuit progress
+                    const t = Math.min(1.0, Math.max(0, (scrollProgress - 0.12) / 0.16));
+                    
+                    // Col 3 street (row goes 3 to 0 as t goes 0 to 0.25)
+                    if (col === 3 && row >= 0 && row <= 3) {
+                        const reqT = (3 - row) * 0.25 / 3;
+                        if (t >= reqT) visited = true;
+                    }
+                    // Row 3 street (col goes 0 to 3 as t goes 0.75 to 0.95)
+                    if (row === 3 && col >= 0 && col <= 3) {
+                        const reqT = 0.75 + col * 0.20 / 3;
+                        if (t >= reqT) visited = true;
+                    }
+                }
+                if (scrollProgress >= 0.40) {
+                    // Path: (3,3) to (3,4)
+                    if (col === 3 && row === 4 && scrollProgress >= 0.45) visited = true;
+                }
+                
+                if (visited) {
+                    tile.classList.add('visited');
+                } else {
+                    tile.classList.remove('visited');
+                }
+            });
+
+            // 2. Dynamic perimeter trail & progress updates
+            const progressFill = document.getElementById('perimeter-progress-fill');
+            const progressLabel = document.getElementById('perimeter-progress-label');
+            const claimClosePulses = document.getElementById('claim-close-pulses');
+            const trailLines = document.querySelectorAll('#claim-walk-trail line');
+
+            // Sound chime state trigger
+            if (scrollProgress >= 0.272 && scrollProgress < 0.28) {
+                if (!chimeTriggered) {
+                    playClaimChime();
+                    chimeTriggered = true;
+                }
+            } else if (scrollProgress < 0.272 || scrollProgress >= 0.28) {
+                chimeTriggered = false;
+            }
+
+            if (scrollProgress >= 0.12 && scrollProgress < 0.28) {
+                const t = (scrollProgress - 0.12) / 0.16;
+                const percent = Math.round(t * 100);
+                if (progressFill) progressFill.style.width = `${percent}%`;
+                if (progressLabel) progressLabel.innerText = `PERIMETER: ${percent}%`;
+
+                if (t < 0.95) {
+                    // Hide static turf polygon, show dynamic trail
+                    turfPolygon.className = '';
+                    turfPolygon.style.opacity = 0;
+                    if (claimClosePulses) claimClosePulses.className = '';
+
+                    const N = 40;
+                    let pts = [];
+                    for (let i = 0; i <= N; i++) {
+                        const t_val = (i / N) * t;
+                        pts.push(getPosAtT(t_val));
+                    }
+
+                    trailLines.forEach((line, idx) => {
+                        if (idx < N) {
+                            const p1 = pts[idx];
+                            const p2 = pts[idx + 1];
+                            line.setAttribute('x1', p1.x);
+                            line.setAttribute('y1', p1.y);
+                            line.setAttribute('x2', p2.x);
+                            line.setAttribute('y2', p2.y);
+                            line.setAttribute('opacity', 0.3 + 0.7 * (idx / (N - 1)));
+                            line.setAttribute('display', 'inline');
+                        } else {
+                            line.setAttribute('display', 'none');
+                        }
+                    });
+                } else {
+                    // LOOP CLOSE MOMENT (t >= 0.95)
+                    // Hide dynamic trail lines
+                    trailLines.forEach(line => line.setAttribute('display', 'none'));
+
+                    // Snap: turf-polygon instantly completes
+                    turfPolygon.className = 'claimed';
+                    turfPolygon.style.opacity = 1;
+
+                    // Trigger pulses
+                    if (claimClosePulses) {
+                        claimClosePulses.className = 'active-claim-pulses';
+                    }
+                }
+            } else {
+                // Not in Scene 02
+                trailLines.forEach(line => line.setAttribute('display', 'none'));
+                if (claimClosePulses) claimClosePulses.className = '';
+                if (progressFill) progressFill.style.width = '0%';
+                if (progressLabel) progressLabel.innerText = 'PERIMETER: 0%';
+
+                // Sync turf-polygon classes for other scenes
+                if (scrollProgress >= 0.28 && scrollProgress < 0.55) {
+                    turfPolygon.className = 'claimed';
+                    turfPolygon.style.opacity = 1;
+                } else if (scrollProgress >= 0.55 && scrollProgress < 0.70) {
+                    turfPolygon.className = 'flickering';
+                    turfPolygon.style.opacity = 1;
+                } else if (scrollProgress >= 0.70 && scrollProgress < 0.85) {
+                    turfPolygon.className = 'ghost';
+                } else if (scrollProgress >= 0.85) {
+                    turfPolygon.className = 'flash';
+                    turfPolygon.style.opacity = 1;
+                } else {
+                    turfPolygon.className = '';
+                    turfPolygon.style.opacity = 0;
+                }
+            }
+
+            // 3. Central blocks rooftop color syncing
+            const centralBlocks = document.querySelectorAll('.central-block');
+            centralBlocks.forEach(block => {
+                block.className = 'block-tile central-block';
+                if (scrollProgress >= 0.272 && scrollProgress < 0.55) {
+                    block.classList.add('claimed');
+                } else if (scrollProgress >= 0.55 && scrollProgress < 0.70) {
+                    block.classList.add('flickering');
+                } else if (scrollProgress >= 0.70 && scrollProgress < 0.85) {
+                    block.classList.add('ghost');
+                } else if (scrollProgress >= 0.85) {
+                    block.classList.add('claimed');
+                    if (scrollProgress < 0.88) block.classList.add('flash');
+                }
+            });
+
+            // 4. Chevron footprints (fade behind character - disabled in Scene 02)
+            const f1 = document.getElementById('footstep-1');
+            const f2 = document.getElementById('footstep-2');
+            const f3 = document.getElementById('footstep-3');
+            f1.style.opacity = 0;
+            f2.style.opacity = 0;
+            f3.style.opacity = 0;
+
+            // 5. Ripple effects (Act 3 & Act 6B)
+            if (scrollProgress >= 0.28 && scrollProgress < 0.40) {
+                if (!rippleActive3) {
+                    rippleGroup.className = 'active-ripple';
+                    rippleActive3 = true;
+                    playSynthSuccess();
+                }
+            } else {
+                rippleActive3 = false;
+                if (!rippleActive6b) rippleGroup.className = '';
+            }
+
+            if (scrollProgress >= 0.85 && scrollProgress < 1.0) {
+                if (!rippleActive6b) {
+                    rippleGroup.className = 'active-ripple large-ripple';
+                    rippleActive6b = true;
+                    playSynthSuccess();
+                }
+            } else {
+                rippleActive6b = false;
+                if (!rippleActive3 && scrollProgress >= 1.0) rippleGroup.className = '';
+            }
+
+            // 6. Hotspot active rendering (Act 4 & 5)
+            if (scrollProgress >= 0.40 && scrollProgress < 0.70) {
+                hotspotGroup.classList.add('active-hotspot');
+                hotspotGroup.style.opacity = 1;
+                hotspotGroup.style.pointerEvents = 'auto';
+            } else {
+                hotspotGroup.classList.remove('active-hotspot');
+                hotspotGroup.style.opacity = 0;
+                hotspotGroup.style.pointerEvents = 'none';
+            }
+
+            // Update HUD descriptions dynamically
+            if (!isShowingError) {
+                const hud4Desc = document.getElementById('hud-act-4-desc');
+                if (hud4Desc) {
+                    if (hotspotPlaced && hotspotCol !== null) {
+                        hud4Desc.innerHTML = `<span style="color: #B8FF00; font-weight: bold;">✓ HOTSPOT ACTIVE:</span> Corner (${hotspotCol},${hotspotRow}) upgraded. Royalties: +150 BP/min.`;
+                    } else {
+                        hud4Desc.innerHTML = `Spend Block Points. Click a block inside your green perimeter to drop a Hotspot.`;
+                    }
+                }
+
+                const hud5Desc = document.getElementById('hud-act-5-desc');
+                if (hud5Desc) {
+                    if (hotspotPlaced && hotspotCol !== null) {
+                        hud5Desc.innerHTML = `<span style="color: #B8FF00; font-weight: bold;">✓ SECURED:</span> Hotspot at (${hotspotCol},${hotspotRow}) pays your rent. +150 BP/min covering cost.`;
+                    } else {
+                        hud5Desc.innerHTML = `Pay Block Points to keep your Turf. Miss it and the streets eat you alive.`;
+                    }
+                }
+            }
+        }
+
+        // Initialize engine and attach scroll listeners
+        initGrid();
+        positionHotspot(hotspotCol, hotspotRow);
+        window.addEventListener('scroll', updateScroll);
+        window.addEventListener('resize', handleResize);
         
-        scrollyCards.forEach(card => {
-            scrollyObserver.observe(card);
-        });
+        // Execute initial sizing
+        handleResize();
     </script>
 </body>
 </html>

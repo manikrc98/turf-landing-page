@@ -1,0 +1,153 @@
+/* --- Streetwear Character Animations --- */
+
+/* 1. IDLE - Gentle 2.5s float
+   Translates the entire character body up and down while scaling the shadow underneath.
+*/
+.idle #body, 
+.idle #head, 
+.idle #arm-right, 
+.idle #arm-left, 
+.idle #leg-right, 
+.idle #leg-left {
+    animation: idle-float 2.5s ease-in-out infinite;
+}
+.idle #shadow {
+    animation: idle-shadow-scale 2.5s ease-in-out infinite;
+    transform-origin: 78px 170px;
+}
+
+@keyframes idle-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-4px);
+    }
+}
+@keyframes idle-shadow-scale {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.15;
+    }
+    50% {
+        transform: scale(0.85);
+        opacity: 0.08;
+    }
+}
+
+/* 2. WALKING - Legs and arms alternate on 0.42s cycle
+   Rotates opposite legs and arms at hip/shoulder joints and adds a slight body bob.
+*/
+.walking #leg-left {
+    animation: walk-swing-leg-left 0.42s ease-in-out infinite;
+    transform-origin: 74px 124px;
+}
+.walking #leg-right {
+    animation: walk-swing-leg-right 0.42s ease-in-out infinite;
+    transform-origin: 84px 124px;
+}
+.walking #arm-left {
+    animation: walk-swing-arm-left 0.42s ease-in-out infinite;
+    transform-origin: 68px 88px;
+}
+.walking #arm-right {
+    animation: walk-swing-arm-right 0.42s ease-in-out infinite;
+    transform-origin: 88px 92px;
+}
+.walking #body, 
+.walking #head {
+    animation: walk-bob-body 0.42s ease-in-out infinite;
+}
+
+@keyframes walk-swing-leg-left {
+    0%, 100% { transform: rotate(-12deg); }
+    50% { transform: rotate(14deg); }
+}
+@keyframes walk-swing-leg-right {
+    0%, 100% { transform: rotate(14deg); }
+    50% { transform: rotate(-12deg); }
+}
+@keyframes walk-swing-arm-left {
+    0%, 100% { transform: rotate(16deg); }
+    50% { transform: rotate(-16deg); }
+}
+@keyframes walk-swing-arm-right {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+}
+@keyframes walk-bob-body {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+/* 3. TAPPING - Right arm raises toward face on 0.55s loop
+   Rotates the right (phone-holding) arm upwards and nods the head slightly.
+*/
+.tapping #arm-right {
+    animation: tap-arm-raise-action 0.55s ease-in-out infinite;
+    transform-origin: 88px 92px;
+}
+.tapping #head {
+    animation: tap-head-nod-action 0.55s ease-in-out infinite;
+    transform-origin: 80px 80px;
+}
+
+@keyframes tap-arm-raise-action {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(-15deg) translateY(-2px);
+    }
+}
+@keyframes tap-head-nod-action {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(5deg) translateY(1px);
+    }
+}
+
+/* 4. CELEBRATING - Full character jumps -18px with overshoot ease, fires once
+   Jumps the entire character visual set up and down using a custom overshoot curve, 
+   accompanied by a corresponding shadow scale down and fade.
+*/
+.celebrating #body,
+.celebrating #head,
+.celebrating #arm-right,
+.celebrating #arm-left,
+.celebrating #leg-right,
+.celebrating #leg-left {
+    animation: celebrate-jump-action 0.85s cubic-bezier(0.25, 1.4, 0.45, 1.4) 1 forwards;
+}
+.celebrating #shadow {
+    animation: celebrate-shadow-scale 0.85s cubic-bezier(0.25, 1.4, 0.45, 1.4) 1 forwards;
+    transform-origin: 78px 170px;
+}
+
+@keyframes celebrate-jump-action {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-18px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+@keyframes celebrate-shadow-scale {
+    0% {
+        transform: scale(1);
+        opacity: 0.15;
+    }
+    50% {
+        transform: scale(0.6);
+        opacity: 0.05;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.15;
+    }
+}
