@@ -307,12 +307,25 @@
             text-decoration: none;
             display: inline-block;
             text-align: center;
+            animation: cta-breathing-glow 2.5s infinite ease-in-out;
+        }
+        @keyframes cta-breathing-glow {
+            0% {
+                box-shadow: 0 0 0px #B8FF00;
+            }
+            50% {
+                box-shadow: 0 0 28px #B8FF00;
+            }
+            100% {
+                box-shadow: 0 0 0px #B8FF00;
+            }
         }
         @media (hover: hover) {
             .cta-primary:hover {
+                animation: none;
                 transform: scale(1.04);
                 background-color: #d1ff33;
-                box-shadow: 0 0 20px rgba(184, 255, 0, 0.7);
+                box-shadow: 0 0 28px rgba(184, 255, 0, 0.9);
             }
         }
         .cta-secondary {
@@ -1362,14 +1375,14 @@
         
         /* Turf perimeter polygon */
         #turf-polygon {
-            fill: transparent;
+            fill: rgba(184, 255, 0, 0);
             stroke: #B8FF00;
             stroke-width: 3;
             stroke-linecap: round;
             stroke-linejoin: round;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.4s ease, fill 300ms ease;
+            transition: none;
         }
         #turf-polygon.claimed {
             opacity: 1;
@@ -1377,6 +1390,7 @@
             stroke: #B8FF00;
             stroke-width: 3;
             filter: drop-shadow(0 0 6px #B8FF00);
+            transition: fill 250ms ease-out, opacity 0s;
         }
         #turf-polygon.flickering {
             opacity: 1;
@@ -1417,25 +1431,25 @@
         /* Concentric Sonar Pulses */
         .pulse-poly {
             opacity: 0;
-            transform-origin: 0px 120px;
+            transform-origin: 0px 90px;
         }
         .active-claim-pulses .pulse-poly-1 {
-            animation: claim-pulse-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: claim-pulse-anim 600ms ease-out forwards;
         }
         .active-claim-pulses .pulse-poly-2 {
-            animation: claim-pulse-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+            animation: claim-pulse-anim 600ms ease-out 120ms forwards;
         }
         .active-claim-pulses .pulse-poly-3 {
-            animation: claim-pulse-anim 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+            animation: claim-pulse-anim 600ms ease-out 240ms forwards;
         }
 
         @keyframes claim-pulse-anim {
             0% {
-                transform: scale(1.0);
+                transform: scale(1);
                 opacity: 0.8;
             }
             100% {
-                transform: scale(1.4);
+                transform: scale(1.5);
                 opacity: 0;
             }
         }
@@ -1710,8 +1724,8 @@
         
         /* Bouncy drop for Act 3 Claimed badge */
         .hud-badge-container {
-            transform: translate(-50%, -150px);
-            transition: opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translate(-50%, -100vh);
+            transition: opacity 400ms cubic-bezier(0.34, 1.56, 0.64, 1), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .hud-badge-container.active {
             transform: translate(-50%, 0) !important;
@@ -1929,6 +1943,106 @@
                 font-size: 36px;
             }
         }
+        
+        /* --- SCENE TRANSITION SHARPNESS & BACKGROUND GLOWS --- */
+        .scrolly-background-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+            background: radial-gradient(circle at 50% 50%, var(--scene-glow-color, transparent) 0%, transparent 60%);
+            opacity: var(--scene-glow-opacity, 0.15);
+            transition: background 0.6s ease, opacity 0.6s ease;
+        }
+
+        #scene-scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1.5px;
+            background-color: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            z-index: 100;
+            pointer-events: none;
+            transform: scaleX(0);
+            transform-origin: left;
+            opacity: 0;
+        }
+
+        #scene-scanner-line.active-sweep {
+            animation: scanner-sweep-anim 300ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes scanner-sweep-anim {
+            0% {
+                transform: scaleX(0);
+                opacity: 1;
+            }
+            90% {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scaleX(1);
+                opacity: 0;
+            }
+        }
+
+        .hud-card.active .hud-title,
+        .hud-badge-container.active .hud-badge,
+        .scrolly-bridge-container-overlay.active h2 {
+            animation: headline-flicker-anim 80ms ease-in-out 1;
+        }
+
+        @keyframes headline-flicker-anim {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Ambient Glow States per Scene */
+        .scrolly-sticky-container {
+            --character-glow-color: #B8FF00; /* fallback */
+        }
+        .scrolly-sticky-container.state-act1 {
+            --character-glow-color: transparent;
+            --scene-glow-color: transparent;
+            --scene-glow-opacity: 0;
+        }
+        .scrolly-sticky-container.state-act2 {
+            --character-glow-color: #00FF88;
+            --scene-glow-color: #00FF88;
+            --scene-glow-opacity: 0.25;
+        }
+        .scrolly-sticky-container.state-act3 {
+            --character-glow-color: #B8FF00;
+            --scene-glow-color: #B8FF00;
+            --scene-glow-opacity: 0.3;
+        }
+        .scrolly-sticky-container.state-act4 {
+            --character-glow-color: #C4FF00;
+            --scene-glow-color: #C4FF00;
+            --scene-glow-opacity: 0.25;
+        }
+        .scrolly-sticky-container.state-act5 {
+            --character-glow-color: #FF4D00;
+            --scene-glow-color: #FF4D00;
+            --scene-glow-opacity: 0.25;
+        }
+        .scrolly-sticky-container.state-act6a {
+            --character-glow-color: #888888;
+            --scene-glow-color: #888888;
+            --scene-glow-opacity: 0.15;
+        }
+        .scrolly-sticky-container.state-act6b {
+            --character-glow-color: #B8FF00;
+            --scene-glow-color: #B8FF00;
+            --scene-glow-opacity: 0.3;
+        }
     </style>
 </head>
 <body>
@@ -1973,11 +2087,11 @@
                     <a href="#map-section" class="cta-secondary">SEE THE MAP</a>
                 </div>
                 <div class="hero-stats">
-                    <span class="stat-item">14,200 TURFS CLAIMED</span>
+                    <span class="stat-item"><span id="stat-turfs">0</span> TURFS CLAIMED</span>
                     <span class="stat-separator">·</span>
-                    <span class="stat-item">₹8.4L IN ROYALTIES PAID</span>
+                    <span class="stat-item">₹<span id="stat-royalties">0.0</span>L IN ROYALTIES PAID</span>
                     <span class="stat-separator">·</span>
-                    <span class="stat-item">230 CITIES ACTIVE</span>
+                    <span class="stat-item"><span id="stat-cities">0</span> CITIES ACTIVE</span>
                 </div>
             </div>
             
@@ -2060,13 +2174,17 @@
     <!-- SECTION: SCROLLYTELLING NARRATIVE -->
     <section class="scrolly-section" id="scrolly-narrative">
         <div class="scrolly-sticky-container" id="scrolly-sticky-container">
+            <!-- Ambient Background Glow -->
+            <div class="scrolly-background-glow"></div>
+            <!-- Top Scanner Rule -->
+            <div id="scene-scanner-line"></div>
             <!-- SVG Isometric World Canvas -->
             <svg id="isometric-svg" width="100%" height="100%" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice">
                 <defs>
                     <!-- Ambient green radial gradient for character glow -->
                     <radialGradient id="character-glow-radial" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="#B8FF00" stop-opacity="0.35" />
-                        <stop offset="100%" stop-color="#B8FF00" stop-opacity="0" />
+                        <stop offset="0%" stop-color="var(--character-glow-color, #B8FF00)" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="var(--character-glow-color, #B8FF00)" stop-opacity="0" />
                     </radialGradient>
                     
                     <!-- Glow gradient for phone screen -->
@@ -2919,27 +3037,32 @@
             if (isAudioOn) {
                 initAudio();
             }
-            if (audioCtx && audioCtx.state === 'running') {
-                document.removeEventListener('click', resumeAudioOnInteraction);
-                document.removeEventListener('keydown', resumeAudioOnInteraction);
-                document.removeEventListener('touchstart', resumeAudioOnInteraction);
+            if (audioCtx) {
+                document.removeEventListener('click', resumeAudioOnInteraction, { capture: true });
+                document.removeEventListener('keydown', resumeAudioOnInteraction, { capture: true });
+                document.removeEventListener('touchstart', resumeAudioOnInteraction, { capture: true });
             }
         };
-        document.addEventListener('click', resumeAudioOnInteraction);
-        document.addEventListener('keydown', resumeAudioOnInteraction);
-        document.addEventListener('touchstart', resumeAudioOnInteraction);
+        document.addEventListener('click', resumeAudioOnInteraction, { capture: true });
+        document.addEventListener('keydown', resumeAudioOnInteraction, { capture: true });
+        document.addEventListener('touchstart', resumeAudioOnInteraction, { capture: true });
         
         const audioBtn = document.getElementById('audio-toggle');
         audioBtn.addEventListener('click', () => {
+            const wasSuspended = !audioCtx || audioCtx.state !== 'running';
             initAudio();
-            isAudioOn = !isAudioOn;
-            if (isAudioOn) {
-                audioBtn.innerText = 'HUD_AUDIO: [ON]';
-                audioBtn.classList.add('audio-active');
+            if (isAudioOn && wasSuspended) {
                 playSynthSuccess();
             } else {
-                audioBtn.innerText = 'HUD_AUDIO: [OFF]';
-                audioBtn.classList.remove('audio-active');
+                isAudioOn = !isAudioOn;
+                if (isAudioOn) {
+                    audioBtn.innerText = 'HUD_AUDIO: [ON]';
+                    audioBtn.classList.add('audio-active');
+                    playSynthSuccess();
+                } else {
+                    audioBtn.innerText = 'HUD_AUDIO: [OFF]';
+                    audioBtn.classList.remove('audio-active');
+                }
             }
         });
         
@@ -2956,8 +3079,10 @@
         }
 
         function playSynthClick() {
+            if (!isAudioOn) return;
+            initAudio();
             triggerHaptic('click');
-            if (!isAudioOn || !audioCtx) return;
+            if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             
@@ -2976,8 +3101,10 @@
         }
         
         function playSynthSuccess() {
+            if (!isAudioOn) return;
+            initAudio();
             triggerHaptic('success');
-            if (!isAudioOn || !audioCtx) return;
+            if (!audioCtx) return;
             const now = audioCtx.currentTime;
             
             const osc1 = audioCtx.createOscillator();
@@ -3004,8 +3131,10 @@
         }
 
         function playSynthError() {
+            if (!isAudioOn) return;
+            initAudio();
             triggerHaptic('error');
-            if (!isAudioOn || !audioCtx) return;
+            if (!audioCtx) return;
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -3393,6 +3522,14 @@
         const openTurfLabel = document.getElementById('open-turf-label');
         const rippleGroup = document.getElementById('ripple-group');
         const hotspotGroup = document.getElementById('hotspot-group');
+        const scannerLine = document.getElementById('scene-scanner-line');
+        
+        function triggerScannerSweep() {
+            if (!scannerLine) return;
+            scannerLine.classList.remove('active-sweep');
+            void scannerLine.offsetWidth; // trigger reflow
+            scannerLine.classList.add('active-sweep');
+        }
         
         let hotspotCol = 1;
         let hotspotRow = 1;
@@ -3735,8 +3872,10 @@
         let chimeTriggered = false;
 
         function playClaimChime() {
+            if (!isAudioOn) return;
+            initAudio();
             triggerHaptic('success');
-            if (!isAudioOn || !audioCtx) return;
+            if (!audioCtx) return;
             const now = audioCtx.currentTime;
             
             const osc1 = audioCtx.createOscillator();
@@ -3783,7 +3922,10 @@
             
             if (actIndex !== currentActIndex) {
                 currentActIndex = actIndex;
-                if (currentActIndex >= 0) playSynthClick();
+                if (currentActIndex >= 0) {
+                    playSynthClick();
+                    triggerScannerSweep();
+                }
             }
 
             // HUD visibility & fade outs
@@ -3946,11 +4088,19 @@
 
             if (scrollProgress >= 0.12 && scrollProgress < 0.28) {
                 const t = (scrollProgress - 0.12) / 0.16;
-                const percent = Math.round(t * 100);
-                if (progressFill) progressFill.style.width = `${percent}%`;
-                if (progressLabel) progressLabel.innerText = `PERIMETER: ${percent}%`;
 
                 if (t < 0.95) {
+                    // Reset lock state if we scrolled back
+                    if (window.lockTimeout) {
+                        clearTimeout(window.lockTimeout);
+                        window.lockTimeout = null;
+                    }
+                    window.isLockedState = false;
+
+                    const percent = Math.round(t * 100);
+                    if (progressFill) progressFill.style.width = `${percent}%`;
+                    if (progressLabel) progressLabel.innerText = `PERIMETER: ${percent}%`;
+
                     // Hide static turf polygon, show dynamic trail
                     turfPolygon.className = '';
                     turfPolygon.style.opacity = 0;
@@ -3990,9 +4140,29 @@
                     if (claimClosePulses) {
                         claimClosePulses.className = 'active-claim-pulses';
                     }
+
+                    // 5. The PERIMETER counter hits 100% and freezes, then after 200ms the label changes to "LOCKED ✦"
+                    if (progressFill) progressFill.style.width = '100%';
+
+                    if (!window.isLockedState) {
+                        window.isLockedState = true;
+                        if (progressLabel) progressLabel.innerText = 'PERIMETER: 100%';
+                        if (window.lockTimeout) clearTimeout(window.lockTimeout);
+                        window.lockTimeout = setTimeout(() => {
+                            if (progressLabel && window.isLockedState) {
+                                progressLabel.innerText = 'LOCKED ✦';
+                            }
+                        }, 200);
+                    }
                 }
             } else {
                 // Not in Scene 02
+                if (window.lockTimeout) {
+                    clearTimeout(window.lockTimeout);
+                    window.lockTimeout = null;
+                }
+                window.isLockedState = false;
+
                 trailLines.forEach(line => line.setAttribute('display', 'none'));
                 if (claimClosePulses) claimClosePulses.className = '';
                 if (progressFill) progressFill.style.width = '0%';
@@ -4095,6 +4265,42 @@
                 }
             }
         }
+
+        // Animate live counters on page load
+        function animateCounters() {
+            const duration = 1500; // 1.5s
+            const startTime = performance.now();
+
+            const targets = [
+                { el: document.getElementById('stat-turfs'), start: 0, end: 14200, format: (val) => Math.floor(val).toLocaleString('en-US') },
+                { el: document.getElementById('stat-royalties'), start: 0, end: 8.4, format: (val) => val.toFixed(1) },
+                { el: document.getElementById('stat-cities'), start: 0, end: 230, format: (val) => Math.floor(val).toString() }
+            ];
+
+            function update(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // easeOutCubic
+                const ease = 1 - Math.pow(1 - progress, 3);
+
+                targets.forEach(target => {
+                    if (target.el) {
+                        const currentVal = target.start + (target.end - target.start) * ease;
+                        target.el.innerText = target.format(currentVal);
+                    }
+                });
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Kick off counter animation
+        animateCounters();
 
         // Initialize engine and attach scroll listeners
         initGrid();
